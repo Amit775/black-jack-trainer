@@ -64,11 +64,358 @@
   }
 }
 
+// Table Accessories - Shoe and Discard Tray
+.table-accessories {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 40px;
+  pointer-events: none;
+  z-index: 10;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+// Card Shoe
+.shoe-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.shoe {
+  width: 80px;
+  height: 60px;
+  background: linear-gradient(135deg, #4a3728 0%, #2d1f15 100%);
+  border-radius: 6px 6px 4px 4px;
+  position: relative;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+  border: 2px solid #5a4738;
+  overflow: hidden;
+
+  // Shoe opening on top
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 8px;
+    background: linear-gradient(180deg, #1a1a1a 0%, #333 100%);
+    border-radius: 0 0 4px 4px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.shoe-cards {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.shoe-card-layer {
+  position: absolute;
+  bottom: calc(var(--layer-index, 0) * 2px);
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  background: linear-gradient(90deg, #fff 0%, #f0f0f0 50%, #e0e0e0 100%);
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s ease;
+
+  &.past-cut-card {
+    background: linear-gradient(90deg, #ffcccc 0%, #ffaaaa 50%, #ff9999 100%);
+  }
+}
+
+.cut-card {
+  position: absolute;
+  bottom: calc(var(--cut-position, 20) * 1%);
+  left: 2px;
+  right: 2px;
+  height: 4px;
+  background: linear-gradient(90deg, #ff3333 0%, #cc0000 50%, #ff3333 100%);
+  border-radius: 2px;
+  box-shadow: 
+    0 0 8px rgba(255, 0, 0, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+}
+
+.shoe-info, .discard-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  .cards-remaining, .cards-count {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffc107;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .cards-label {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// Discard Tray
+.discard-tray-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.discard-tray {
+  width: 70px;
+  height: 50px;
+  background: linear-gradient(135deg, #3a2a1a 0%, #251a10 100%);
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.3);
+  border: 2px solid #4a3a2a;
+
+  // Inner shadow to show depth
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 30%);
+    border-radius: 4px;
+  }
+
+  &.has-cards {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2px;
+    }
+  }
+}
+
+.discard-card-layer {
+  position: absolute;
+  bottom: calc(6px + var(--layer-index, 0) * 2px);
+  left: 6px;
+  right: 6px;
+  height: 3px;
+  background: linear-gradient(90deg, #e0e0e0 0%, #ccc 50%, #bbb 100%);
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: rotate(calc(var(--layer-index, 0) * 0.5deg - 2deg));
+}
+
+// Shuffle Indicator
+.shuffle-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.95) 0%, rgba(255, 87, 34, 0.95) 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  box-shadow: 
+    0 4px 16px rgba(255, 87, 34, 0.4),
+    0 0 20px rgba(255, 152, 0, 0.3);
+  animation: shuffle-pulse 1.5s ease-in-out infinite;
+  z-index: 20;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    animation: shuffle-rotate 2s linear infinite;
+  }
+}
+
+@keyframes shuffle-pulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 4px 16px rgba(255, 87, 34, 0.4), 0 0 20px rgba(255, 152, 0, 0.3);
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.05);
+    box-shadow: 0 6px 24px rgba(255, 87, 34, 0.6), 0 0 30px rgba(255, 152, 0, 0.5);
+  }
+}
+
+@keyframes shuffle-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Card Dealing Animation - from left (shoe side)
+@keyframes card-deal {
+  0% {
+    transform: translateX(-250px) translateY(-80px) rotate(-20deg) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+// Card flip/reveal animation for hole card - flips the whole container
+@keyframes card-reveal-flip {
+  0% {
+    transform: perspective(600px) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(600px) rotateY(180deg);
+  }
+}
+
+// Split animation - card moves to the side
+@keyframes card-split-left {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(-30px) scale(0.95);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes card-split-right {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(30px) scale(0.95);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+.card-dealing {
+  animation: card-deal 0.45s ease-out both;
+}
+
+.card-revealing {
+  perspective: 600px;
+
+  .card-flip-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: card-reveal-flip 0.6s ease-in-out forwards;
+  }
+
+  .card-flip-back,
+  .card-flip-front {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-flip-back {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+    z-index: 2;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 5px,
+        rgba(255, 255, 255, 0.1) 5px,
+        rgba(255, 255, 255, 0.1) 10px
+      );
+      border-radius: 6px;
+    }
+  }
+
+  .card-flip-front {
+    background: white;
+    transform: rotateY(180deg);
+    color: #333;
+    gap: 2px;
+
+    &.red {
+      color: #c62828;
+    }
+
+    .card-rank {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    .card-suit {
+      font-size: 1.6rem;
+    }
+  }
+}
+
+.card-split-left {
+  animation: card-split-left 0.4s ease-out both;
+}
+
+.card-split-right {
+  animation: card-split-right 0.4s ease-out both;
+}
+
 // Dealer Section (12 o'clock)
 .dealer-section {
   display: flex;
   justify-content: center;
-  padding-top: 8px;
+  padding-top: 80px; // Increased to make room for shoe/discard accessories
 
   .dealer-area {
     display: flex;
@@ -593,6 +940,10 @@
     min-height: 450px;
   }
 
+  .dealer-section {
+    padding-top: 60px; // Less padding on mobile
+  }
+
   .player-boxes-area {
     gap: 12px;
     flex-wrap: wrap;
@@ -645,6 +996,42 @@
       width: 44px !important;
       height: 44px !important;
       font-size: 0.7rem !important;
+    }
+  }
+
+  // Hide table accessories on small screens or make them smaller
+  .table-accessories {
+    padding: 0 20px;
+    top: 10px;
+  }
+
+  .shoe {
+    width: 60px;
+    height: 45px;
+  }
+
+  .discard-tray {
+    width: 50px;
+    height: 40px;
+  }
+
+  .shoe-info, .discard-info {
+    .cards-remaining, .cards-count {
+      font-size: 0.85rem;
+    }
+    .cards-label {
+      font-size: 0.55rem;
+    }
+  }
+
+  .shuffle-indicator {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
   }
 }

@@ -6,8 +6,18 @@ import { BalanceService } from './balance.service';
 export type GamePhase = 'betting' | 'insurance' | 'playing' | 'dealer-turn' | 'resolved';
 export type GameResult = 'win' | 'lose' | 'push' | 'blackjack' | null;
 
+export interface ShoeState {
+  totalCards: number;
+  cardsDealt: number;
+  cutCardPosition: number; // Position from the end where cut card is placed
+  shuffleNeeded: boolean; // True when cut card has been reached
+  cutCardReached: boolean; // True when cut card was reached this round
+}
+
 export interface GameState {
   shoe: Card[];
+  shoeState: ShoeState;
+  discardTray: Card[];
   boxes: Box[];
   activeBoxIndex: number;
   insuranceBoxIndex: number;
@@ -52,6 +62,14 @@ const createInitialBoxes = (): Box[] => [
 
 const INITIAL_STATE: GameState = {
   shoe: [],
+  shoeState: {
+    totalCards: 0,
+    cardsDealt: 0,
+    cutCardPosition: 0,
+    shuffleNeeded: false,
+    cutCardReached: false,
+  },
+  discardTray: [],
   boxes: createInitialBoxes(),
   activeBoxIndex: 1, // Center box is default
   insuranceBoxIndex: -1,
@@ -91,6 +109,9 @@ export class GameService {
   });
   readonly result = computed(() => this._state().result);
   readonly message = computed(() => this._state().message);
+  readonly shoeState = computed(() => this._state().shoeState);
+  readonly discardTray = computed(() => this._state().discardTray);
+  readonly shoe = computed(() => this._state().shoe);
 
   readonly activeHand = computed(() => {
     const box = this.activeBox();
@@ -122,8 +143,20 @@ export class GameService {
 
   readonly dealerHandValue = computed(() => {
     const hand = this.dealerHand();
+    const phase = this._state().phase;
     if (!hand || hand.cards.length === 0) return 0;
-    return this.cardService.calculateHandValue(hand.cards).value;
+
+    // During dealer turn, only count cards that have been revealed (animation complete)
+    if (phase === 'dealer-turn') {
+      const revealedCards = hand.cards.filter((c) => c.isRevealed);
+      if (revealedCards.length === 0) return 0;
+      return this.cardService.calculateHandValue(revealedCards).value;
+    }
+
+    // In other phases, count face-up cards only
+    const visibleCards = hand.cards.filter((c) => c.faceUp);
+    if (visibleCards.length === 0) return 0;
+    return this.cardService.calculateHandValue(visibleCards).value;
   });
 
   readonly dealerShowsAce = computed(() => {
@@ -174,8 +207,90 @@ export class GameService {
   });
 
   initializeShoe(): void {
-    const shoe = this.cardService.createShoe(this.settingsService.numberOfDecks());
-    this._state.update((s) => ({ ...s, shoe }));
+    const numberOfDecks = this.settingsService.numberOfDecks();
+    const shoe = this.cardService.createShoe(numberOfDecks);
+    const totalCards = shoe.length;
+
+    // Calculate cut card position based on number of decks
+    // For 4+ decks: 1 to 1.5 decks from end (52-78 cards)
+    // For 1-2 decks: 0.5 deck from end (26 cards)
+    let cutCardMin: number;
+    let cutCardMax: number;
+
+    if (numberOfDecks >= 4) {
+      cutCardMin = 52; // 1 deck
+      cutCardMax = 78; // 1.5 decks
+    } else {
+      cutCardMin = 26; // 0.5 deck
+      cutCardMax = 26; // 0.5 deck
+    }
+
+    // Random position between min and max
+    const cutCardPosition = cutCardMin + Math.floor(Math.random() * (cutCardMax - cutCardMin + 1));
+
+    const shoeState: ShoeState = {
+      totalCards,
+      cardsDealt: 0,
+      cutCardPosition,
+      shuffleNeeded: false,
+      cutCardReached: false,
+    };
+
+    this._state.update((s) => ({ ...s, shoe, shoeState, discardTray: [] }));
+  }
+
+  /**
+   * Deal a card from the shoe and track cut card position
+   * Returns the dealt card and updates shoe state
+   */
+  private dealCardFromShoe(
+    shoe: Card[],
+    shoeState: ShoeState,
+    animationDelay: number = 0,
+  ): { card: Card; shoe: Card[]; shoeState: ShoeState; cutCardHit: boolean } {
+    const updatedShoe = [...shoe];
+    const card: Card = {
+      ...updatedShoe.pop()!,
+      faceUp: true,
+      animationState: 'dealing',
+      animationDelay,
+    };
+
+    const newCardsDealt = shoeState.cardsDealt + 1;
+    const remainingCards = shoeState.totalCards - newCardsDealt;
+
+    // Check if we've reached the cut card position
+    const cutCardHit = remainingCards <= shoeState.cutCardPosition && !shoeState.cutCardReached;
+
+    const updatedShoeState: ShoeState = {
+      ...shoeState,
+      cardsDealt: newCardsDealt,
+      cutCardReached: shoeState.cutCardReached || cutCardHit,
+      shuffleNeeded: shoeState.shuffleNeeded || cutCardHit,
+    };
+
+    return { card, shoe: updatedShoe, shoeState: updatedShoeState, cutCardHit };
+  }
+
+  /**
+   * Add cards to the discard tray (after a hand is complete)
+   */
+  private addToDiscardTray(cards: Card[]): void {
+    this._state.update((s) => ({
+      ...s,
+      discardTray: [...s.discardTray, ...cards.map((c) => ({ ...c, faceUp: false }))],
+    }));
+  }
+
+  /**
+   * Shuffle the shoe if needed (called at start of new round)
+   */
+  reshuffleIfNeeded(): boolean {
+    const state = this._state();
+    if (!state.shoeState.shuffleNeeded) return false;
+
+    this.initializeShoe();
+    return true;
   }
 
   toggleBox(position: BoxPosition): void {
@@ -246,10 +361,19 @@ export class GameService {
   private dealInitialCards(): void {
     const state = this._state();
     let shoe = [...state.shoe];
+    let shoeState = { ...state.shoeState };
+    let cutCardHitDuringDeal = false;
+    let cardIndex = 0; // Track card order for animation delay
+    const ANIMATION_DELAY_MS = 150; // Delay between each card
 
     if (shoe.length < 52) {
-      shoe = this.cardService.createShoe(this.settingsService.numberOfDecks());
+      this.initializeShoe();
+      shoe = [...this._state().shoe];
+      shoeState = { ...this._state().shoeState };
     }
+
+    // Reset cut card reached for this round
+    shoeState = { ...shoeState, cutCardReached: false };
 
     // Get active boxes in order: left, center, right
     const boxOrder: BoxPosition[] = ['left', 'center', 'right'];
@@ -260,29 +384,56 @@ export class GameService {
     // Deal first card to each active box
     const boxes = state.boxes.map((box) => {
       if (!box.isActive) return box;
-      const card1 = { ...shoe.pop()!, faceUp: true };
+      const result = this.dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
+      cardIndex++;
+      shoe = result.shoe;
+      shoeState = result.shoeState;
+      if (result.cutCardHit) cutCardHitDuringDeal = true;
+
       const hand = this.cardService.createEmptyHand(box.bet);
-      hand.cards = [card1];
+      hand.cards = [result.card];
       return { ...box, hands: [hand], activeHandIndex: 0, isResolved: false };
     });
 
     // Deal first card to dealer
-    const dealerCard1 = { ...shoe.pop()!, faceUp: true };
+    let dealerResult = this.dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
+    cardIndex++;
+    shoe = dealerResult.shoe;
+    shoeState = dealerResult.shoeState;
+    if (dealerResult.cutCardHit) cutCardHitDuringDeal = true;
+    const dealerCard1 = dealerResult.card;
 
     // Deal second card to each active box
     const boxesWithSecondCard = boxes.map((box) => {
       if (!box.isActive) return box;
-      const card2 = { ...shoe.pop()!, faceUp: true };
+      const result = this.dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
+      cardIndex++;
+      shoe = result.shoe;
+      shoeState = result.shoeState;
+      if (result.cutCardHit) cutCardHitDuringDeal = true;
+
       const hand = { ...box.hands[0] };
-      hand.cards = [...hand.cards, card2];
+      hand.cards = [...hand.cards, result.card];
       return { ...box, hands: [hand] };
     });
 
     // Deal second card to dealer (face down)
-    const dealerCard2 = { ...shoe.pop()!, faceUp: false };
+    dealerResult = this.dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
+    shoe = dealerResult.shoe;
+    shoeState = dealerResult.shoeState;
+    if (dealerResult.cutCardHit) cutCardHitDuringDeal = true;
+    const dealerCard2: Card = {
+      ...dealerResult.card,
+      faceUp: false,
+      animationState: 'dealing',
+      animationDelay: cardIndex * ANIMATION_DELAY_MS,
+    };
 
     const dealerHand = this.cardService.createEmptyHand();
     dealerHand.cards = [dealerCard1, dealerCard2];
+
+    // Mark if cut card was reached during this deal
+    shoeState = { ...shoeState, cutCardReached: cutCardHitDuringDeal };
 
     // Find first active box for play order
     const firstActiveIndex = boxesWithSecondCard.findIndex((b) => b.isActive);
@@ -304,6 +455,7 @@ export class GameService {
       this._state.update((s) => ({
         ...s,
         shoe,
+        shoeState,
         boxes: boxesWithSecondCard,
         activeBoxIndex: firstActiveIndex,
         insuranceBoxIndex: firstInsuranceBoxIndex,
@@ -315,6 +467,7 @@ export class GameService {
       this._state.update((s) => ({
         ...s,
         shoe,
+        shoeState,
         boxes: boxesWithSecondCard,
         activeBoxIndex: firstActiveIndex,
         insuranceBoxIndex: -1,
@@ -479,13 +632,16 @@ export class GameService {
 
     const state = this._state();
     let shoe = [...state.shoe];
+    let shoeState = { ...state.shoeState };
     const boxes = [...state.boxes];
     const box = { ...boxes[state.activeBoxIndex] };
     const hands = [...box.hands];
     const hand = { ...hands[box.activeHandIndex] };
 
-    const newCard = { ...shoe.pop()!, faceUp: true };
-    hand.cards = [...hand.cards, newCard];
+    const result = this.dealCardFromShoe(shoe, shoeState);
+    shoe = result.shoe;
+    shoeState = result.shoeState;
+    hand.cards = [...hand.cards, result.card];
 
     if (this.cardService.isBusted(hand.cards)) {
       hand.isBusted = true;
@@ -499,6 +655,7 @@ export class GameService {
     this._state.update((s) => ({
       ...s,
       shoe,
+      shoeState,
       boxes,
       message: hand.isBusted ? 'Busted!' : 'Your turn',
     }));
@@ -540,6 +697,7 @@ export class GameService {
     if (!this.balanceService.deductBet(hand.bet)) return;
 
     let shoe = [...state.shoe];
+    let shoeState = { ...state.shoeState };
     const boxes = [...state.boxes];
     const box = { ...boxes[state.activeBoxIndex] };
     const hands = [...box.hands];
@@ -548,8 +706,10 @@ export class GameService {
     updatedHand.bet *= 2;
     updatedHand.isDoubledDown = true;
 
-    const newCard = { ...shoe.pop()!, faceUp: true };
-    updatedHand.cards = [...updatedHand.cards, newCard];
+    const result = this.dealCardFromShoe(shoe, shoeState);
+    shoe = result.shoe;
+    shoeState = result.shoeState;
+    updatedHand.cards = [...updatedHand.cards, result.card];
 
     if (this.cardService.isBusted(updatedHand.cards)) {
       updatedHand.isBusted = true;
@@ -564,6 +724,7 @@ export class GameService {
     this._state.update((s) => ({
       ...s,
       shoe,
+      shoeState,
       boxes,
       message: updatedHand.isBusted ? 'Busted!' : 'Doubled down',
     }));
@@ -581,18 +742,41 @@ export class GameService {
     if (!this.balanceService.deductBet(hand.bet)) return;
 
     let shoe = [...state.shoe];
+    let shoeState = { ...state.shoeState };
     const boxes = [...state.boxes];
     const box = { ...boxes[state.activeBoxIndex] };
 
     const currentHand = box.hands[box.activeHandIndex];
+    const SPLIT_DELAY_MS = 300;
+    const DEAL_DELAY_MS = 500;
 
-    // Create two new hands from the split
+    // Create two new hands from the split with animations
     const hand1 = this.cardService.createEmptyHand(currentHand.bet);
-    hand1.cards = [currentHand.cards[0], { ...shoe.pop()!, faceUp: true }];
+    // First card from original hand - animate split to left
+    const splitCard1: Card = {
+      ...currentHand.cards[0],
+      animationState: 'split-left',
+      animationDelay: 0,
+    };
+    // Deal new card to first hand after split animation
+    let result = this.dealCardFromShoe(shoe, shoeState, SPLIT_DELAY_MS + DEAL_DELAY_MS);
+    shoe = result.shoe;
+    shoeState = result.shoeState;
+    hand1.cards = [splitCard1, result.card];
     hand1.isSplit = true;
 
     const hand2 = this.cardService.createEmptyHand(currentHand.bet);
-    hand2.cards = [currentHand.cards[1], { ...shoe.pop()!, faceUp: true }];
+    // Second card from original hand - animate split to right
+    const splitCard2: Card = {
+      ...currentHand.cards[1],
+      animationState: 'split-right',
+      animationDelay: 0,
+    };
+    // Deal new card to second hand after first hand gets its card
+    result = this.dealCardFromShoe(shoe, shoeState, SPLIT_DELAY_MS + DEAL_DELAY_MS * 2);
+    shoe = result.shoe;
+    shoeState = result.shoeState;
+    hand2.cards = [splitCard2, result.card];
     hand2.isSplit = true;
 
     // Replace current hand with two split hands
@@ -604,6 +788,7 @@ export class GameService {
     this._state.update((s) => ({
       ...s,
       shoe,
+      shoeState,
       boxes,
       message: 'Split! Playing first hand.',
     }));
@@ -672,9 +857,26 @@ export class GameService {
       return;
     }
 
-    // Reveal dealer's hole card
+    // Mark first card as revealed (it was already face up), prepare hole card for reveal animation
     const dealerHand = { ...state.dealerHand };
-    dealerHand.cards = dealerHand.cards.map((c) => ({ ...c, faceUp: true }));
+    dealerHand.cards = dealerHand.cards.map((c, index) => {
+      if (index === 0) {
+        // First card is already visible, mark as revealed
+        return { ...c, isRevealed: true };
+      }
+      if (index === 1 && !c.faceUp) {
+        // This is the hole card being revealed - add reveal animation
+        // faceUp is set to true but isRevealed is false until animation completes
+        return {
+          ...c,
+          faceUp: true,
+          animationState: 'revealing' as const,
+          animationDelay: 0,
+          isRevealed: false,
+        };
+      }
+      return { ...c, faceUp: true };
+    });
 
     this._state.update((s) => ({
       ...s,
@@ -683,34 +885,74 @@ export class GameService {
       message: "Dealer's turn",
     }));
 
-    this.dealerPlay();
+    // After hole card reveal animation (600ms), mark it as revealed and continue
+    setTimeout(() => {
+      this._state.update((s) => {
+        const hand = { ...s.dealerHand };
+        hand.cards = hand.cards.map((c, index) => {
+          if (index === 1) {
+            return { ...c, animationState: 'dealt' as const, isRevealed: true };
+          }
+          return c;
+        });
+        return { ...s, dealerHand: hand };
+      });
+
+      // Small delay to let sum update be visible before dealing more cards
+      setTimeout(() => this.dealerPlay(), 300);
+    }, 600);
   }
 
   private dealerPlay(): void {
     const state = this._state();
-    let shoe = [...state.shoe];
     const dealerHand = { ...state.dealerHand };
 
     let handValue = this.cardService.calculateHandValue(dealerHand.cards);
+    const DEAL_ANIMATION_MS = 450;
+    const DELAY_BETWEEN_CARDS = 500;
 
-    while (
+    const needsMoreCards =
       handValue.value < 17 ||
-      (handValue.value === 17 && handValue.isSoft && this.settingsService.dealerHitsSoft17())
-    ) {
-      const newCard = { ...shoe.pop()!, faceUp: true };
-      dealerHand.cards = [...dealerHand.cards, newCard];
-      handValue = this.cardService.calculateHandValue(dealerHand.cards);
+      (handValue.value === 17 && handValue.isSoft && this.settingsService.dealerHitsSoft17());
+
+    if (!needsMoreCards) {
+      // Dealer stands, resolve game
+      const dealerBusted = handValue.value > 21;
+      this.compareHands(dealerBusted);
+      return;
     }
 
-    const dealerBusted = handValue.value > 21;
+    // Deal one card at a time with animation
+    let shoe = [...state.shoe];
+    let shoeState = { ...state.shoeState };
+
+    const result = this.dealCardFromShoe(shoe, shoeState, 0);
+    const newCard = { ...result.card, isRevealed: false }; // Not revealed until animation completes
+    dealerHand.cards = [...dealerHand.cards, newCard];
 
     this._state.update((s) => ({
       ...s,
-      shoe,
+      shoe: result.shoe,
+      shoeState: result.shoeState,
       dealerHand,
     }));
 
-    this.compareHands(dealerBusted);
+    // After deal animation completes, mark card as revealed and check if more cards needed
+    setTimeout(() => {
+      this._state.update((s) => {
+        const hand = { ...s.dealerHand };
+        hand.cards = hand.cards.map((c, index) => {
+          if (index === hand.cards.length - 1) {
+            return { ...c, animationState: 'dealt' as const, isRevealed: true };
+          }
+          return c;
+        });
+        return { ...s, dealerHand: hand };
+      });
+
+      // Check if dealer needs more cards after this one is revealed
+      setTimeout(() => this.dealerPlay(), DELAY_BETWEEN_CARDS - DEAL_ANIMATION_MS);
+    }, DEAL_ANIMATION_MS);
   }
 
   private compareHands(dealerBusted: boolean): void {
@@ -799,14 +1041,41 @@ export class GameService {
   }
 
   newGame(): void {
-    const currentShoe = this._state().shoe;
-    const shoe =
-      currentShoe.length > 52
-        ? currentShoe
-        : this.cardService.createShoe(this.settingsService.numberOfDecks());
+    const state = this._state();
+
+    // Collect all cards from the current round to discard tray
+    const cardsToDiscard: Card[] = [];
+
+    // Add dealer cards
+    cardsToDiscard.push(...state.dealerHand.cards);
+
+    // Add all player cards
+    state.boxes.forEach((box) => {
+      if (box.isActive) {
+        box.hands.forEach((hand) => {
+          cardsToDiscard.push(...hand.cards);
+        });
+      }
+    });
+
+    // Check if we need to reshuffle
+    let shoe = [...state.shoe];
+    let shoeState = { ...state.shoeState };
+    let discardTray = [
+      ...state.discardTray,
+      ...cardsToDiscard.map((c) => ({ ...c, faceUp: false })),
+    ];
+
+    if (shoeState.shuffleNeeded || shoe.length < 52) {
+      // Reshuffle - this will reset everything
+      this.initializeShoe();
+      shoe = [...this._state().shoe];
+      shoeState = { ...this._state().shoeState };
+      discardTray = [];
+    }
 
     // Preserve active boxes and their bet amounts
-    const previousBoxes = this._state().boxes;
+    const previousBoxes = state.boxes;
     const boxes = createInitialBoxes().map((box, index) => ({
       ...box,
       isActive: previousBoxes[index].isActive,
@@ -816,6 +1085,8 @@ export class GameService {
     this._state.set({
       ...INITIAL_STATE,
       shoe,
+      shoeState,
+      discardTray,
       boxes,
     });
   }

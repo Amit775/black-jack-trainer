@@ -196,6 +196,41 @@ export class PlayComponent implements OnInit {
     }
   }
 
+  // Shoe visualization helpers
+  getShoeCardLayers(): number[] {
+    // Create visual layers for the shoe (max 20 layers for visual)
+    const shoeState = this.gameService.shoeState();
+    const remainingCards = shoeState.totalCards - shoeState.cardsDealt;
+    const maxLayers = 20;
+    const layers = Math.min(
+      Math.ceil(remainingCards / (shoeState.totalCards / maxLayers)),
+      maxLayers,
+    );
+    return Array.from({ length: layers }, (_, i) => i);
+  }
+
+  isLayerPastCutCard(layerIndex: number): boolean {
+    const shoeState = this.gameService.shoeState();
+    const remainingCards = shoeState.totalCards - shoeState.cardsDealt;
+    const cardsPerLayer = shoeState.totalCards / 20;
+    const layerCards = (20 - layerIndex) * cardsPerLayer;
+    return layerCards <= shoeState.cutCardPosition;
+  }
+
+  getCutCardVisualPosition(): number {
+    // Returns a percentage position for the cut card (0-100, from bottom)
+    const shoeState = this.gameService.shoeState();
+    const cutCardPercent = (shoeState.cutCardPosition / shoeState.totalCards) * 100;
+    return Math.min(cutCardPercent, 40); // Cap at 40% from bottom for visual
+  }
+
+  getDiscardLayers(): number[] {
+    const discardCount = this.gameService.discardTray().length;
+    const maxLayers = 15;
+    const layers = Math.min(Math.ceil(discardCount / 10), maxLayers);
+    return Array.from({ length: layers }, (_, i) => i);
+  }
+
   openSettings(): void {
     this.dialog.open(SettingsDialogComponent, {
       width: '500px',

@@ -3,11 +3,27 @@ import { Injectable } from '@angular/core';
 export type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 export type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
 export type BoxPosition = 'left' | 'center' | 'right';
+export type CardAnimationState =
+  | 'none'
+  | 'dealing'
+  | 'revealing'
+  | 'dealt'
+  | 'split-left'
+  | 'split-right';
+
+let cardIdCounter = 0;
+export function generateCardId(): string {
+  return `card-${++cardIdCounter}-${Date.now()}`;
+}
 
 export interface Card {
+  id: string; // Unique identifier for tracking animations
   suit: Suit;
   rank: Rank;
   faceUp: boolean;
+  animationState?: CardAnimationState;
+  animationDelay?: number; // Delay in ms for staggered animations
+  isRevealed?: boolean; // True when animation is complete and card should count in sum
 }
 
 export interface Hand {
@@ -56,7 +72,7 @@ export class CardService {
     const deck: Card[] = [];
     for (const suit of this.suits) {
       for (const rank of this.ranks) {
-        deck.push({ suit, rank, faceUp: true });
+        deck.push({ id: generateCardId(), suit, rank, faceUp: true });
       }
     }
     return deck;
