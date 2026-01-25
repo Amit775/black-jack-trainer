@@ -11,7 +11,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { GameService } from '../../services/game.service';
 import { BalanceService } from '../../services/balance.service';
-import { CardService, Card } from '../../services/card.service';
+import { CardService, Card, Hand, Box, BoxPosition } from '../../services/card.service';
 import { SettingsDialogComponent } from './settings-dialog/settings-dialog';
 
 @Component({
@@ -38,26 +38,93 @@ export class PlayComponent implements OnInit {
   protected readonly cardService = inject(CardService);
   private readonly dialog = inject(MatDialog);
 
-  protected betAmount = 10;
   protected readonly betChips = [5, 10, 25, 50, 100];
+  protected readonly defaultBet = 10;
 
   ngOnInit(): void {
     this.gameService.initializeShoe();
     this.gameService.newGame();
+    // Set default bet for center box
+    this.gameService.setBoxBet('center', this.defaultBet);
   }
 
-  placeBet(): void {
-    if (this.betAmount > 0 && this.betAmount <= this.balanceService.balance()) {
-      this.gameService.placeBet(this.betAmount);
+  // Box management
+  getBox(position: BoxPosition): Box | undefined {
+    return this.gameService.boxes().find(b => b.position === position);
+  }
+
+  toggleBox(position: BoxPosition): void {
+    this.gameService.toggleBox(position);
+    const box = this.getBox(position);
+    if (box?.isActive && box.bet === 0) {
+      this.gameService.setBoxBet(position, this.defaultBet);
     }
   }
 
-  selectBetChip(amount: number): void {
-    if (amount <= this.balanceService.balance()) {
-      this.betAmount = amount;
+  isActiveBox(position: BoxPosition): boolean {
+    const activeBox = this.gameService.activeBox();
+    return activeBox?.position === position && this.gameService.phase() === 'playing';
+  }
+
+  isActiveHand(position: BoxPosition, handIndex: number): boolean {
+    const activeBox = this.gameService.activeBox();
+    if (!activeBox || activeBox.position !== position) return false;
+    if (this.gameService.phase() !== 'playing') return false;
+    return activeBox.activeHandIndex === handIndex;
+  }
+
+  // Betting
+  selectBetChip(position: BoxPosition, amount: number): void {
+    this.gameService.setBoxBet(position, amount);
+  }
+
+  incrementBet(position: BoxPosition): void {
+    const box = this.getBox(position);
+    if (box) {
+      this.gameService.setBoxBet(position, box.bet + 5);
     }
   }
 
+  decrementBet(position: BoxPosition): void {
+    const box = this.getBox(position);
+    if (box && box.bet > 5) {
+      this.gameService.setBoxBet(position, box.bet - 5);
+    }
+  }
+
+  canIncrementBet(position: BoxPosition): boolean {
+    const box = this.getBox(position);
+    if (!box) return false;
+    const currentTotal = this.getTotalBet();
+    return currentTotal + 5 <= this.balanceService.balance();
+  }
+
+  canSelectChip(amount: number): boolean {
+    const boxes = this.gameService.boxes();
+    const otherBoxesBet = boxes
+      .filter(b => b.isActive && b.position !== 'center')
+      .reduce((sum, b) => sum + b.bet, 0);
+    return otherBoxesBet + amount <= this.balanceService.balance();
+  }
+
+  getTotalBet(): number {
+    return this.gameService.currentBet();
+  }
+
+  canPlaceBets(): boolean {
+    const boxes = this.gameService.boxes();
+    const activeBoxes = boxes.filter(b => b.isActive);
+    if (activeBoxes.length === 0) return false;
+    if (activeBoxes.some(b => b.bet <= 0)) return false;
+    const total = this.getTotalBet();
+    return total > 0 && total <= this.balanceService.balance();
+  }
+
+  placeBets(): void {
+    this.gameService.placeBets();
+  }
+
+  // Game actions
   hit(): void {
     this.gameService.hit();
   }
@@ -86,10 +153,9 @@ export class PlayComponent implements OnInit {
     this.gameService.newGame();
   }
 
-  openSettings(): void {
-    this.dialog.open(SettingsDialogComponent, {
-      width: '500px',
-    });
+  // Display helpers
+  getHandValue(hand: Hand): number {
+    return this.gameService.getHandValue(hand);
   }
 
   getCardDisplay(card: Card): string {
@@ -108,5 +174,21 @@ export class PlayComponent implements OnInit {
       spades: '♠',
     };
     return symbols[suit] || '';
+  }
+
+  getResultText(result: string): string {
+    switch (result) {
+      case 'win': return 'Win';
+      case 'blackjack': return 'BJ!';
+      case 'lose': return 'Lose';
+      case 'push': return 'Push';
+      default: return '';
+    }
+  }
+
+  openSettings(): void {
+    this.dialog.open(SettingsDialogComponent, {
+      width: '500px',
+    });
   }
 }

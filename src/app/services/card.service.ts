@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 export type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 export type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
+export type BoxPosition = 'left' | 'center' | 'right';
 
 export interface Card {
   suit: Suit;
@@ -16,6 +17,16 @@ export interface Hand {
   isSplit: boolean;
   isStanding: boolean;
   isBusted: boolean;
+  result?: 'win' | 'lose' | 'push' | 'blackjack';
+}
+
+export interface Box {
+  position: BoxPosition;
+  hands: Hand[];
+  activeHandIndex: number;
+  bet: number;
+  isActive: boolean;
+  isResolved: boolean;
 }
 
 @Injectable({
@@ -145,6 +156,17 @@ export class CardService {
       isSplit: false,
       isStanding: false,
       isBusted: false,
+    };
+  }
+
+  createEmptyBox(position: BoxPosition, bet: number = 0): Box {
+    return {
+      position,
+      hands: [],
+      activeHandIndex: 0,
+      bet,
+      isActive: false,
+      isResolved: false,
     };
   }
 }

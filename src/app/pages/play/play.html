@@ -10,31 +10,33 @@
   </div>
 
   <div class="game-table">
-    <!-- Dealer Section -->
+    <!-- Dealer Section (12 o'clock) -->
     <div class="dealer-section">
-      <div class="hand-label">
-        <span>Dealer</span>
-        @if (gameService.dealerHand().cards.length > 0) {
-          <span class="hand-value">{{ gameService.dealerHandValue() }}</span>
-        }
-      </div>
-      <div class="cards-row">
-        @for (card of gameService.dealerHand().cards; track $index) {
-          <div
-            class="card"
-            [class.face-down]="!card.faceUp"
-            [class.red]="card.suit === 'hearts' || card.suit === 'diamonds'"
-          >
-            @if (card.faceUp) {
-              <div class="card-content">
-                <span class="card-rank">{{ card.rank }}</span>
-                <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
-              </div>
-            } @else {
-              <div class="card-back"></div>
-            }
-          </div>
-        }
+      <div class="dealer-area">
+        <div class="hand-label">
+          <span>Dealer</span>
+          @if (gameService.dealerHand().cards.length > 0) {
+            <span class="hand-value">{{ gameService.dealerHandValue() }}</span>
+          }
+        </div>
+        <div class="cards-row">
+          @for (card of gameService.dealerHand().cards; track $index) {
+            <div
+              class="card"
+              [class.face-down]="!card.faceUp"
+              [class.red]="card.suit === 'hearts' || card.suit === 'diamonds'"
+            >
+              @if (card.faceUp) {
+                <div class="card-content">
+                  <span class="card-rank">{{ card.rank }}</span>
+                  <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
+                </div>
+              } @else {
+                <div class="card-back"></div>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
 
@@ -49,66 +51,239 @@
       </span>
     </div>
 
-    <!-- Player Section -->
-    <div class="player-section">
-      <div class="hand-label">
-        <span>Your Hand</span>
-        @if (gameService.activeHand() && gameService.activeHand().cards.length) {
-          <span class="hand-value">{{ gameService.playerHandValue() }}</span>
+    <!-- Player Boxes Area (Semi-circle layout) -->
+    <div class="player-boxes-area">
+      <!-- Left Box (8 o'clock) -->
+      <div class="box-position box-left" [class.active-box]="isActiveBox('left')">
+        @if (getBox('left'); as box) {
+          @if (box.isActive) {
+            <div class="player-box">
+              <div class="box-hands">
+                @for (hand of box.hands; track $index; let handIdx = $index) {
+                  <div 
+                    class="hand-container" 
+                    [class.active-hand]="isActiveHand('left', handIdx)"
+                    [class.split-hand]="hand.isSplit"
+                    [class.result-win]="hand.result === 'win' || hand.result === 'blackjack'"
+                    [class.result-lose]="hand.result === 'lose'"
+                    [class.result-push]="hand.result === 'push'"
+                  >
+                    <div class="hand-info">
+                      @if (hand.cards.length > 0) {
+                        <span class="hand-value-badge">{{ getHandValue(hand) }}</span>
+                      }
+                      @if (hand.isSplit) {
+                        <span class="split-badge">Split {{ handIdx + 1 }}</span>
+                      }
+                    </div>
+                    <div class="cards-row">
+                      @for (card of hand.cards; track $index) {
+                        <div class="card small" [class.red]="card.suit === 'hearts' || card.suit === 'diamonds'">
+                          <div class="card-content">
+                            <span class="card-rank">{{ card.rank }}</span>
+                            <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    <div class="bet-display">
+                      <span class="bet-chip">${{ hand.bet }}</span>
+                      @if (hand.result) {
+                        <span class="result-badge" [class]="hand.result">
+                          {{ getResultText(hand.result) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+              @if (gameService.phase() === 'betting') {
+                <div class="box-bet-controls">
+                  <button mat-mini-fab color="warn" (click)="toggleBox('left')" matTooltip="Remove box">
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <div class="bet-input-group">
+                    <button mat-icon-button (click)="decrementBet('left')" [disabled]="box.bet <= 5">
+                      <mat-icon>remove_circle</mat-icon>
+                    </button>
+                    <span class="bet-amount">${{ box.bet }}</span>
+                    <button mat-icon-button (click)="incrementBet('left')" [disabled]="!canIncrementBet('left')">
+                      <mat-icon>add_circle</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (gameService.phase() === 'betting') {
+            <button class="add-box-btn" mat-fab (click)="toggleBox('left')" matTooltip="Add left box">
+              <mat-icon>add</mat-icon>
+            </button>
+          }
         }
       </div>
-      <div class="cards-row">
-        @if (gameService.activeHand(); as hand) {
-          @for (card of hand.cards; track $index) {
-            <div class="card" [class.red]="card.suit === 'hearts' || card.suit === 'diamonds'">
-              <div class="card-content">
-                <span class="card-rank">{{ card.rank }}</span>
-                <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
+
+      <!-- Center Box (6 o'clock - Main) -->
+      <div class="box-position box-center" [class.active-box]="isActiveBox('center')">
+        @if (getBox('center'); as box) {
+          @if (box.isActive) {
+            <div class="player-box main-box">
+              <div class="box-hands">
+                @for (hand of box.hands; track $index; let handIdx = $index) {
+                  <div 
+                    class="hand-container" 
+                    [class.active-hand]="isActiveHand('center', handIdx)"
+                    [class.split-hand]="hand.isSplit"
+                    [class.result-win]="hand.result === 'win' || hand.result === 'blackjack'"
+                    [class.result-lose]="hand.result === 'lose'"
+                    [class.result-push]="hand.result === 'push'"
+                  >
+                    <div class="hand-info">
+                      @if (hand.cards.length > 0) {
+                        <span class="hand-value-badge">{{ getHandValue(hand) }}</span>
+                      }
+                      @if (hand.isSplit) {
+                        <span class="split-badge">Split {{ handIdx + 1 }}</span>
+                      }
+                    </div>
+                    <div class="cards-row">
+                      @for (card of hand.cards; track $index) {
+                        <div class="card" [class.red]="card.suit === 'hearts' || card.suit === 'diamonds'">
+                          <div class="card-content">
+                            <span class="card-rank">{{ card.rank }}</span>
+                            <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    <div class="bet-display">
+                      <span class="bet-chip">${{ hand.bet }}</span>
+                      @if (hand.result) {
+                        <span class="result-badge" [class]="hand.result">
+                          {{ getResultText(hand.result) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
+              @if (gameService.phase() === 'betting') {
+                <div class="box-bet-controls main-controls">
+                  <div class="bet-chips-row">
+                    @for (chip of betChips; track chip) {
+                      <button
+                        mat-fab
+                        class="chip-btn"
+                        [class.selected]="box.bet === chip"
+                        [disabled]="!canSelectChip(chip)"
+                        (click)="selectBetChip('center', chip)"
+                      >
+                        ${{ chip }}
+                      </button>
+                    }
+                  </div>
+                  <div class="bet-input-group">
+                    <button mat-icon-button (click)="decrementBet('center')" [disabled]="box.bet <= 5">
+                      <mat-icon>remove_circle</mat-icon>
+                    </button>
+                    <span class="bet-amount">${{ box.bet }}</span>
+                    <button mat-icon-button (click)="incrementBet('center')" [disabled]="!canIncrementBet('center')">
+                      <mat-icon>add_circle</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
+          }
+        }
+      </div>
+
+      <!-- Right Box (4 o'clock) -->
+      <div class="box-position box-right" [class.active-box]="isActiveBox('right')">
+        @if (getBox('right'); as box) {
+          @if (box.isActive) {
+            <div class="player-box">
+              <div class="box-hands">
+                @for (hand of box.hands; track $index; let handIdx = $index) {
+                  <div 
+                    class="hand-container" 
+                    [class.active-hand]="isActiveHand('right', handIdx)"
+                    [class.split-hand]="hand.isSplit"
+                    [class.result-win]="hand.result === 'win' || hand.result === 'blackjack'"
+                    [class.result-lose]="hand.result === 'lose'"
+                    [class.result-push]="hand.result === 'push'"
+                  >
+                    <div class="hand-info">
+                      @if (hand.cards.length > 0) {
+                        <span class="hand-value-badge">{{ getHandValue(hand) }}</span>
+                      }
+                      @if (hand.isSplit) {
+                        <span class="split-badge">Split {{ handIdx + 1 }}</span>
+                      }
+                    </div>
+                    <div class="cards-row">
+                      @for (card of hand.cards; track $index) {
+                        <div class="card small" [class.red]="card.suit === 'hearts' || card.suit === 'diamonds'">
+                          <div class="card-content">
+                            <span class="card-rank">{{ card.rank }}</span>
+                            <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    <div class="bet-display">
+                      <span class="bet-chip">${{ hand.bet }}</span>
+                      @if (hand.result) {
+                        <span class="result-badge" [class]="hand.result">
+                          {{ getResultText(hand.result) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+              @if (gameService.phase() === 'betting') {
+                <div class="box-bet-controls">
+                  <button mat-mini-fab color="warn" (click)="toggleBox('right')" matTooltip="Remove box">
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <div class="bet-input-group">
+                    <button mat-icon-button (click)="decrementBet('right')" [disabled]="box.bet <= 5">
+                      <mat-icon>remove_circle</mat-icon>
+                    </button>
+                    <span class="bet-amount">${{ box.bet }}</span>
+                    <button mat-icon-button (click)="incrementBet('right')" [disabled]="!canIncrementBet('right')">
+                      <mat-icon>add_circle</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (gameService.phase() === 'betting') {
+            <button class="add-box-btn" mat-fab (click)="toggleBox('right')" matTooltip="Add right box">
+              <mat-icon>add</mat-icon>
+            </button>
           }
         }
       </div>
     </div>
   </div>
 
-  <!-- Betting Phase -->
+  <!-- Betting Phase - Deal Button -->
   @if (gameService.phase() === 'betting') {
     <div class="betting-section">
-      <div class="bet-chips">
-        @for (chip of betChips; track chip) {
-          <button
-            mat-fab
-            [class.selected]="betAmount === chip"
-            [disabled]="chip > balanceService.balance()"
-            (click)="selectBetChip(chip)"
-          >
-            ${{ chip }}
-          </button>
-        }
+      <div class="total-bet">
+        Total Bet: <strong>${{ getTotalBet() | number: '1.2-2' }}</strong>
       </div>
-      <div class="bet-controls">
-        <mat-form-field appearance="outline">
-          <mat-label>Bet Amount</mat-label>
-          <input
-            matInput
-            type="number"
-            [(ngModel)]="betAmount"
-            min="1"
-            [max]="balanceService.balance()"
-          />
-          <span matTextPrefix>$&nbsp;</span>
-        </mat-form-field>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="placeBet()"
-          [disabled]="betAmount <= 0 || betAmount > balanceService.balance()"
-        >
-          <mat-icon>casino</mat-icon>
-          Deal
-        </button>
-      </div>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="placeBets()"
+        [disabled]="!canPlaceBets()"
+        class="deal-btn"
+      >
+        <mat-icon>casino</mat-icon>
+        Deal
+      </button>
     </div>
   }
 
@@ -158,7 +333,7 @@
         [disabled]="!gameService.canDoubleDown()"
       >
         <mat-icon>double_arrow</mat-icon>
-        Double Down
+        Double
       </button>
       <button mat-raised-button (click)="split()" [disabled]="!gameService.canSplit()">
         <mat-icon>call_split</mat-icon>
@@ -170,9 +345,6 @@
   <!-- Game Resolved -->
   @if (gameService.phase() === 'resolved') {
     <div class="result-section">
-      <div class="current-bet">
-        <span>Bet: ${{ gameService.currentBet() }}</span>
-      </div>
       <button mat-fab extended color="primary" (click)="newGame()">
         <mat-icon>refresh</mat-icon>
         New Game
