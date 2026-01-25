@@ -50,7 +50,7 @@ export class PlayComponent implements OnInit {
 
   // Box management
   getBox(position: BoxPosition): Box | undefined {
-    return this.gameService.boxes().find(b => b.position === position);
+    return this.gameService.boxes().find((b) => b.position === position);
   }
 
   toggleBox(position: BoxPosition): void {
@@ -102,7 +102,7 @@ export class PlayComponent implements OnInit {
   canSelectChip(amount: number): boolean {
     const boxes = this.gameService.boxes();
     const otherBoxesBet = boxes
-      .filter(b => b.isActive && b.position !== 'center')
+      .filter((b) => b.isActive && b.position !== 'center')
       .reduce((sum, b) => sum + b.bet, 0);
     return otherBoxesBet + amount <= this.balanceService.balance();
   }
@@ -113,9 +113,9 @@ export class PlayComponent implements OnInit {
 
   canPlaceBets(): boolean {
     const boxes = this.gameService.boxes();
-    const activeBoxes = boxes.filter(b => b.isActive);
+    const activeBoxes = boxes.filter((b) => b.isActive);
     if (activeBoxes.length === 0) return false;
-    if (activeBoxes.some(b => b.bet <= 0)) return false;
+    if (activeBoxes.some((b) => b.bet <= 0)) return false;
     const total = this.getTotalBet();
     return total > 0 && total <= this.balanceService.balance();
   }
@@ -178,11 +178,16 @@ export class PlayComponent implements OnInit {
 
   getResultText(result: string): string {
     switch (result) {
-      case 'win': return 'Win';
-      case 'blackjack': return 'BJ!';
-      case 'lose': return 'Lose';
-      case 'push': return 'Push';
-      default: return '';
+      case 'win':
+        return 'Win';
+      case 'blackjack':
+        return 'BJ!';
+      case 'lose':
+        return 'Lose';
+      case 'push':
+        return 'Push';
+      default:
+        return '';
     }
   }
 

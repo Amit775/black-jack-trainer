@@ -101,7 +101,7 @@ export class GameService {
     return hand.cards[0]?.faceUp && hand.cards[0]?.rank === 'A';
   });
 
-  readonly activeBoxes = computed(() => this._state().boxes.filter(b => b.isActive));
+  readonly activeBoxes = computed(() => this._state().boxes.filter((b) => b.isActive));
 
   readonly canTakeInsurance = computed(() => {
     const state = this._state();
@@ -150,10 +150,10 @@ export class GameService {
     if (this._state().phase !== 'betting') return;
 
     this._state.update((s) => {
-      const boxes = s.boxes.map(box => {
+      const boxes = s.boxes.map((box) => {
         if (box.position === position) {
           // Don't allow deactivating if it's the only active box
-          if (box.isActive && s.boxes.filter(b => b.isActive).length <= 1) {
+          if (box.isActive && s.boxes.filter((b) => b.isActive).length <= 1) {
             return box;
           }
           return { ...box, isActive: !box.isActive, bet: box.isActive ? 0 : box.bet };
@@ -168,21 +168,19 @@ export class GameService {
     if (this._state().phase !== 'betting') return;
     if (amount < 0) return;
 
-    const box = this._state().boxes.find(b => b.position === position);
+    const box = this._state().boxes.find((b) => b.position === position);
     if (!box || !box.isActive) return;
 
     // Calculate total bet with new amount
-    const otherBoxesBet = this._state().boxes
-      .filter(b => b.isActive && b.position !== position)
+    const otherBoxesBet = this._state()
+      .boxes.filter((b) => b.isActive && b.position !== position)
       .reduce((sum, b) => sum + b.bet, 0);
-    
+
     if (otherBoxesBet + amount > this.balanceService.balance()) return;
 
     this._state.update((s) => ({
       ...s,
-      boxes: s.boxes.map(b => 
-        b.position === position ? { ...b, bet: amount } : b
-      ),
+      boxes: s.boxes.map((b) => (b.position === position ? { ...b, bet: amount } : b)),
     }));
   }
 
@@ -190,11 +188,11 @@ export class GameService {
     const state = this._state();
     if (state.phase !== 'betting') return false;
 
-    const activeBoxes = state.boxes.filter(b => b.isActive);
+    const activeBoxes = state.boxes.filter((b) => b.isActive);
     const totalBet = activeBoxes.reduce((sum, b) => sum + b.bet, 0);
 
     if (totalBet <= 0 || totalBet > this.balanceService.balance()) return false;
-    if (activeBoxes.some(b => b.bet <= 0)) return false;
+    if (activeBoxes.some((b) => b.bet <= 0)) return false;
 
     if (!this.balanceService.deductBet(totalBet)) return false;
 
@@ -223,12 +221,12 @@ export class GameService {
 
     // Get active boxes in order: left, center, right
     const boxOrder: BoxPosition[] = ['left', 'center', 'right'];
-    const activePositions = boxOrder.filter(pos => 
-      state.boxes.find(b => b.position === pos)?.isActive
+    const activePositions = boxOrder.filter(
+      (pos) => state.boxes.find((b) => b.position === pos)?.isActive,
     );
 
     // Deal first card to each active box
-    const boxes = state.boxes.map(box => {
+    const boxes = state.boxes.map((box) => {
       if (!box.isActive) return box;
       const card1 = { ...shoe.pop()!, faceUp: true };
       const hand = this.cardService.createEmptyHand(box.bet);
@@ -240,7 +238,7 @@ export class GameService {
     const dealerCard1 = { ...shoe.pop()!, faceUp: true };
 
     // Deal second card to each active box
-    const boxesWithSecondCard = boxes.map(box => {
+    const boxesWithSecondCard = boxes.map((box) => {
       if (!box.isActive) return box;
       const card2 = { ...shoe.pop()!, faceUp: true };
       const hand = { ...box.hands[0] };
@@ -255,13 +253,13 @@ export class GameService {
     dealerHand.cards = [dealerCard1, dealerCard2];
 
     // Find first active box for play order
-    const firstActiveIndex = boxesWithSecondCard.findIndex(b => b.isActive);
+    const firstActiveIndex = boxesWithSecondCard.findIndex((b) => b.isActive);
 
     // Check if dealer shows an Ace and insurance is allowed
     const dealerShowsAce = dealerCard1.rank === 'A';
     const insuranceAllowed = this.settingsService.insuranceAllowed();
     const totalBet = activePositions.reduce((sum, pos) => {
-      const box = boxesWithSecondCard.find(b => b.position === pos);
+      const box = boxesWithSecondCard.find((b) => b.position === pos);
       return sum + (box?.bet || 0);
     }, 0);
     const canAffordInsurance = this.balanceService.balance() >= totalBet / 2;
@@ -336,9 +334,9 @@ export class GameService {
 
     // Check each box for blackjack
     let allResolved = true;
-    const boxes = state.boxes.map(box => {
+    const boxes = state.boxes.map((box) => {
       if (!box.isActive) return box;
-      
+
       const hand = box.hands[0];
       const playerHasBlackjack = this.cardService.isBlackjack(hand.cards);
 
@@ -370,13 +368,15 @@ export class GameService {
         dealerHand: { ...s.dealerHand, cards: dealerCards },
         phase: 'resolved',
         result: allResolved ? 'blackjack' : 'lose',
-        message: dealerHasBlackjack 
-          ? (state.insuranceBet > 0 ? 'Dealer Blackjack! Insurance paid.' : 'Dealer Blackjack!')
+        message: dealerHasBlackjack
+          ? state.insuranceBet > 0
+            ? 'Dealer Blackjack! Insurance paid.'
+            : 'Dealer Blackjack!'
           : 'Blackjack!',
       }));
     } else {
       // Find first non-resolved active box
-      const firstPlayableIndex = boxes.findIndex(b => b.isActive && !b.isResolved);
+      const firstPlayableIndex = boxes.findIndex((b) => b.isActive && !b.isResolved);
       this._state.update((s) => ({
         ...s,
         boxes,
@@ -427,7 +427,7 @@ export class GameService {
     const box = { ...boxes[state.activeBoxIndex] };
     const hands = [...box.hands];
     const hand = { ...hands[box.activeHandIndex] };
-    
+
     hand.isStanding = true;
     hands[box.activeHandIndex] = hand;
     box.hands = hands;
@@ -575,8 +575,8 @@ export class GameService {
 
     // Check if all player hands busted
     const allBusted = state.boxes
-      .filter(b => b.isActive)
-      .every(b => b.hands.every(h => h.isBusted));
+      .filter((b) => b.isActive)
+      .every((b) => b.hands.every((h) => h.isBusted));
 
     if (allBusted) {
       this.resolveGame('lose', 'All hands busted. Dealer wins.');
@@ -633,10 +633,10 @@ export class GameService {
     let losses = 0;
     let pushes = 0;
 
-    const boxes = state.boxes.map(box => {
+    const boxes = state.boxes.map((box) => {
       if (!box.isActive) return box;
 
-      const hands = box.hands.map(hand => {
+      const hands = box.hands.map((hand) => {
         if (hand.isBusted || hand.result) return hand;
 
         const playerValue = this.cardService.calculateHandValue(hand.cards).value;
@@ -711,9 +711,10 @@ export class GameService {
 
   newGame(): void {
     const currentShoe = this._state().shoe;
-    const shoe = currentShoe.length > 52
-      ? currentShoe
-      : this.cardService.createShoe(this.settingsService.numberOfDecks());
+    const shoe =
+      currentShoe.length > 52
+        ? currentShoe
+        : this.cardService.createShoe(this.settingsService.numberOfDecks());
 
     // Preserve active boxes and their bet amounts
     const previousBoxes = this._state().boxes;

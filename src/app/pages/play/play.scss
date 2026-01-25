@@ -459,27 +459,37 @@
   }
 }
 
+// Game Controls - Fixed height container
+.game-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 56px;
+  height: 56px;
+}
+
+// Common control button styling
+.control-btn {
+  min-width: 100px;
+  height: 44px;
+  font-size: 0.95rem;
+}
+
 // Betting Section
 .betting-section {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
 
   .total-bet {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
 
     strong {
       color: #ffc107;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
     }
-  }
-
-  .deal-btn {
-    min-width: 150px;
-    height: 48px;
-    font-size: 1.1rem;
   }
 }
 
@@ -487,48 +497,37 @@
 .action-buttons {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-
-  button {
-    min-width: 100px;
-    height: 44px;
-    font-size: 0.95rem;
-  }
 }
 
 // Insurance Section
 .insurance-section {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
-  padding: 20px;
-  background: rgba(255, 193, 7, 0.1);
-  border-radius: 12px;
-  border: 2px solid rgba(255, 193, 7, 0.3);
 
   .insurance-prompt {
     display: flex;
-    flex-direction: column;
     align-items: center;
     gap: 8px;
-    text-align: center;
 
     mat-icon {
-      font-size: 40px;
-      width: 40px;
-      height: 40px;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
       color: #ffc107;
     }
 
     span {
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: rgba(255, 255, 255, 0.9);
     }
 
     .insurance-cost {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: rgba(255, 255, 255, 0.6);
     }
   }
@@ -536,17 +535,14 @@
   .insurance-buttons {
     display: flex;
     gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
   }
 }
 
 // Result Section
 .result-section {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
 }
 
 // Dealer Turn Indicator
