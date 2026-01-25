@@ -54,7 +54,11 @@
     <!-- Player Boxes Area (Semi-circle layout) -->
     <div class="player-boxes-area">
       <!-- Left Box (8 o'clock) -->
-      <div class="box-position box-left" [class.active-box]="isActiveBox('left')">
+      <div
+        class="box-position box-left"
+        [class.active-box]="isActiveBox('left')"
+        [class.insurance-box]="isInsuranceBox('left')"
+      >
         @if (getBox('left'); as box) {
           @if (box.isActive) {
             <div class="player-box">
@@ -144,7 +148,11 @@
       </div>
 
       <!-- Center Box (6 o'clock - Main) -->
-      <div class="box-position box-center" [class.active-box]="isActiveBox('center')">
+      <div
+        class="box-position box-center"
+        [class.active-box]="isActiveBox('center')"
+        [class.insurance-box]="isInsuranceBox('center')"
+      >
         @if (getBox('center'); as box) {
           @if (box.isActive) {
             <div class="player-box main-box">
@@ -230,7 +238,11 @@
       </div>
 
       <!-- Right Box (4 o'clock) -->
-      <div class="box-position box-right" [class.active-box]="isActiveBox('right')">
+      <div
+        class="box-position box-right"
+        [class.active-box]="isActiveBox('right')"
+        [class.insurance-box]="isInsuranceBox('right')"
+      >
         @if (getBox('right'); as box) {
           @if (box.isActive) {
             <div class="player-box">
@@ -342,27 +354,35 @@
         </div>
       }
       @case ('insurance') {
-        <div class="insurance-section">
-          <div class="insurance-prompt">
-            <mat-icon>shield</mat-icon>
-            <span
-              >Insurance?
-              <span class="insurance-cost"
-                >(Cost: ${{ gameService.currentBet() / 2 | number: '1.2-2' }})</span
-              ></span
-            >
+        @if (gameService.insuranceBox(); as box) {
+          <div class="insurance-section">
+            <div class="insurance-prompt">
+              <mat-icon>shield</mat-icon>
+              <span class="insurance-box-label">{{ box.position | titlecase }} Box</span>
+              <span class="insurance-cost">Insurance ${{ box.bet / 2 | number: '1.2-2' }}?</span>
+            </div>
+            <div class="insurance-buttons">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="takeInsurance()"
+                class="control-btn"
+              >
+                <mat-icon>check</mat-icon>
+                Yes
+              </button>
+              <button
+                mat-raised-button
+                color="warn"
+                (click)="declineInsurance()"
+                class="control-btn"
+              >
+                <mat-icon>close</mat-icon>
+                No
+              </button>
+            </div>
           </div>
-          <div class="insurance-buttons">
-            <button mat-raised-button color="primary" (click)="takeInsurance()" class="control-btn">
-              <mat-icon>check</mat-icon>
-              Yes
-            </button>
-            <button mat-raised-button color="warn" (click)="declineInsurance()" class="control-btn">
-              <mat-icon>close</mat-icon>
-              No
-            </button>
-          </div>
-        </div>
+        }
       }
       @case ('playing') {
         <div class="action-buttons">

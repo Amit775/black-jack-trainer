@@ -232,6 +232,21 @@
       border-color: #ffc107;
     }
   }
+
+  &.insurance-box {
+    .player-box {
+      box-shadow: 
+        0 0 25px rgba(33, 150, 243, 0.5),
+        inset 0 0 20px rgba(0, 0, 0, 0.2);
+      border-color: #2196f3;
+      animation: insurance-pulse 1.5s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes insurance-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(33, 150, 243, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.2); }
+  50% { box-shadow: 0 0 35px rgba(33, 150, 243, 0.7), inset 0 0 20px rgba(0, 0, 0, 0.2); }
 }
 
 .player-box {
@@ -518,17 +533,19 @@
       font-size: 24px;
       width: 24px;
       height: 24px;
-      color: #ffc107;
+      color: #2196f3;
     }
 
-    span {
+    .insurance-box-label {
       font-size: 1rem;
-      color: rgba(255, 255, 255, 0.9);
+      font-weight: bold;
+      color: #2196f3;
+      text-transform: capitalize;
     }
 
     .insurance-cost {
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.6);
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.9);
     }
   }
 

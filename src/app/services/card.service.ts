@@ -27,6 +27,8 @@ export interface Box {
   bet: number;
   isActive: boolean;
   isResolved: boolean;
+  insuranceBet: number;
+  insuranceDeclined: boolean;
 }
 
 @Injectable({
@@ -167,6 +169,8 @@ export class CardService {
       bet,
       isActive: false,
       isResolved: false,
+      insuranceBet: 0,
+      insuranceDeclined: false,
     };
   }
 }

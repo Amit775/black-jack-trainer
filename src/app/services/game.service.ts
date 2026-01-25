@@ -10,23 +10,51 @@ export interface GameState {
   shoe: Card[];
   boxes: Box[];
   activeBoxIndex: number;
+  insuranceBoxIndex: number;
   dealerHand: Hand;
   phase: GamePhase;
-  insuranceBet: number;
   result: GameResult;
   message: string;
 }
 
 const createInitialBoxes = (): Box[] => [
-  { position: 'left', hands: [], activeHandIndex: 0, bet: 0, isActive: false, isResolved: false },
-  { position: 'center', hands: [], activeHandIndex: 0, bet: 0, isActive: true, isResolved: false },
-  { position: 'right', hands: [], activeHandIndex: 0, bet: 0, isActive: false, isResolved: false },
+  {
+    position: 'left',
+    hands: [],
+    activeHandIndex: 0,
+    bet: 0,
+    isActive: false,
+    isResolved: false,
+    insuranceBet: 0,
+    insuranceDeclined: false,
+  },
+  {
+    position: 'center',
+    hands: [],
+    activeHandIndex: 0,
+    bet: 0,
+    isActive: true,
+    isResolved: false,
+    insuranceBet: 0,
+    insuranceDeclined: false,
+  },
+  {
+    position: 'right',
+    hands: [],
+    activeHandIndex: 0,
+    bet: 0,
+    isActive: false,
+    isResolved: false,
+    insuranceBet: 0,
+    insuranceDeclined: false,
+  },
 ];
 
 const INITIAL_STATE: GameState = {
   shoe: [],
   boxes: createInitialBoxes(),
   activeBoxIndex: 1, // Center box is default
+  insuranceBoxIndex: -1,
   dealerHand: {
     cards: [],
     bet: 0,
@@ -36,7 +64,6 @@ const INITIAL_STATE: GameState = {
     isBusted: false,
   },
   phase: 'betting',
-  insuranceBet: 0,
   result: null,
   message: 'Place your bets to start',
 };
@@ -57,7 +84,11 @@ export class GameService {
   readonly activeBoxIndex = computed(() => this._state().activeBoxIndex);
   readonly activeBox = computed(() => this._state().boxes[this._state().activeBoxIndex]);
   readonly dealerHand = computed(() => this._state().dealerHand);
-  readonly insuranceBet = computed(() => this._state().insuranceBet);
+  readonly insuranceBoxIndex = computed(() => this._state().insuranceBoxIndex);
+  readonly insuranceBox = computed(() => {
+    const idx = this._state().insuranceBoxIndex;
+    return idx >= 0 ? this._state().boxes[idx] : null;
+  });
   readonly result = computed(() => this._state().result);
   readonly message = computed(() => this._state().message);
 
@@ -107,9 +138,10 @@ export class GameService {
     const state = this._state();
     if (state.phase !== 'insurance') return false;
     if (!this.settingsService.insuranceAllowed()) return false;
-    const totalBet = this.currentBet();
-    const maxInsurance = totalBet / 2;
-    return this.balanceService.balance() >= maxInsurance;
+    const box = this.insuranceBox();
+    if (!box) return false;
+    const insuranceAmount = box.bet / 2;
+    return this.balanceService.balance() >= insuranceAmount;
   });
 
   readonly canHit = computed(() => {
@@ -258,21 +290,26 @@ export class GameService {
     // Check if dealer shows an Ace and insurance is allowed
     const dealerShowsAce = dealerCard1.rank === 'A';
     const insuranceAllowed = this.settingsService.insuranceAllowed();
-    const totalBet = activePositions.reduce((sum, pos) => {
-      const box = boxesWithSecondCard.find((b) => b.position === pos);
-      return sum + (box?.bet || 0);
-    }, 0);
-    const canAffordInsurance = this.balanceService.balance() >= totalBet / 2;
 
-    if (dealerShowsAce && insuranceAllowed && canAffordInsurance) {
+    // Check if any box can afford insurance
+    const anyBoxCanAffordInsurance = boxesWithSecondCard.some(
+      (box) => box.isActive && this.balanceService.balance() >= box.bet / 2,
+    );
+
+    if (dealerShowsAce && insuranceAllowed && anyBoxCanAffordInsurance) {
+      // Find first active box to offer insurance
+      const firstInsuranceBoxIndex = boxesWithSecondCard.findIndex((b) => b.isActive);
+      const firstBox = boxesWithSecondCard[firstInsuranceBoxIndex];
+
       this._state.update((s) => ({
         ...s,
         shoe,
         boxes: boxesWithSecondCard,
         activeBoxIndex: firstActiveIndex,
+        insuranceBoxIndex: firstInsuranceBoxIndex,
         dealerHand,
         phase: 'insurance',
-        message: 'Dealer shows Ace. Insurance?',
+        message: `Insurance for ${firstBox.position} box? (Cost: $${(firstBox.bet / 2).toFixed(2)})`,
       }));
     } else {
       this._state.update((s) => ({
@@ -280,6 +317,7 @@ export class GameService {
         shoe,
         boxes: boxesWithSecondCard,
         activeBoxIndex: firstActiveIndex,
+        insuranceBoxIndex: -1,
         dealerHand,
         phase: 'playing',
         message: 'Your turn',
@@ -293,32 +331,71 @@ export class GameService {
   takeInsurance(): void {
     const state = this._state();
     if (state.phase !== 'insurance') return;
+    if (state.insuranceBoxIndex < 0) return;
 
-    const totalBet = this.currentBet();
-    const insuranceAmount = totalBet / 2;
+    const box = state.boxes[state.insuranceBoxIndex];
+    const insuranceAmount = box.bet / 2;
     if (!this.balanceService.deductBet(insuranceAmount)) return;
 
-    this._state.update((s) => ({
-      ...s,
-      insuranceBet: insuranceAmount,
-      phase: 'playing',
-      message: 'Insurance taken. Your turn.',
-    }));
+    // Update the box with insurance bet
+    const boxes = [...state.boxes];
+    boxes[state.insuranceBoxIndex] = { ...box, insuranceBet: insuranceAmount };
 
-    this.checkInitialBlackjacks();
+    // Move to next box that needs insurance decision
+    this.moveToNextInsuranceBox(boxes, state.insuranceBoxIndex);
   }
 
   declineInsurance(): void {
     const state = this._state();
     if (state.phase !== 'insurance') return;
+    if (state.insuranceBoxIndex < 0) return;
 
-    this._state.update((s) => ({
-      ...s,
-      phase: 'playing',
-      message: 'Your turn',
-    }));
+    const box = state.boxes[state.insuranceBoxIndex];
 
-    this.checkInitialBlackjacks();
+    // Update the box as declined
+    const boxes = [...state.boxes];
+    boxes[state.insuranceBoxIndex] = { ...box, insuranceDeclined: true };
+
+    // Move to next box that needs insurance decision
+    this.moveToNextInsuranceBox(boxes, state.insuranceBoxIndex);
+  }
+
+  private moveToNextInsuranceBox(boxes: Box[], currentIndex: number): void {
+    // Find next active box that hasn't decided on insurance
+    let nextIndex = -1;
+    for (let i = currentIndex + 1; i < boxes.length; i++) {
+      const b = boxes[i];
+      if (b.isActive && b.insuranceBet === 0 && !b.insuranceDeclined) {
+        // Check if player can afford insurance for this box
+        if (this.balanceService.balance() >= b.bet / 2) {
+          nextIndex = i;
+          break;
+        } else {
+          // Can't afford, auto-decline
+          boxes[i] = { ...b, insuranceDeclined: true };
+        }
+      }
+    }
+
+    if (nextIndex >= 0) {
+      const nextBox = boxes[nextIndex];
+      this._state.update((s) => ({
+        ...s,
+        boxes,
+        insuranceBoxIndex: nextIndex,
+        message: `Insurance for ${nextBox.position} box? (Cost: $${(nextBox.bet / 2).toFixed(2)})`,
+      }));
+    } else {
+      // All boxes have decided, proceed to playing
+      this._state.update((s) => ({
+        ...s,
+        boxes,
+        insuranceBoxIndex: -1,
+        phase: 'playing',
+        message: 'Your turn',
+      }));
+      this.checkInitialBlackjacks();
+    }
   }
 
   private checkInitialBlackjacks(): void {
@@ -327,9 +404,18 @@ export class GameService {
     dealerCards[1] = { ...dealerCards[1], faceUp: true };
     const dealerHasBlackjack = this.cardService.isBlackjack(dealerCards);
 
-    // Handle insurance payout first
-    if (state.insuranceBet > 0 && dealerHasBlackjack) {
-      this.balanceService.addWinnings(state.insuranceBet * 3);
+    // Handle per-box insurance payout
+    let totalInsurancePayout = 0;
+    if (dealerHasBlackjack) {
+      state.boxes.forEach((box) => {
+        if (box.isActive && box.insuranceBet > 0) {
+          // Insurance pays 2:1, so return bet + 2x bet = 3x
+          totalInsurancePayout += box.insuranceBet * 3;
+        }
+      });
+      if (totalInsurancePayout > 0) {
+        this.balanceService.addWinnings(totalInsurancePayout);
+      }
     }
 
     // Check each box for blackjack
@@ -360,6 +446,9 @@ export class GameService {
       return box;
     });
 
+    // Check if any box had insurance
+    const anyInsuranceTaken = state.boxes.some((b) => b.isActive && b.insuranceBet > 0);
+
     if (dealerHasBlackjack || allResolved) {
       // Reveal dealer cards and resolve
       this._state.update((s) => ({
@@ -369,7 +458,7 @@ export class GameService {
         phase: 'resolved',
         result: allResolved ? 'blackjack' : 'lose',
         message: dealerHasBlackjack
-          ? state.insuranceBet > 0
+          ? anyInsuranceTaken
             ? 'Dealer Blackjack! Insurance paid.'
             : 'Dealer Blackjack!'
           : 'Blackjack!',

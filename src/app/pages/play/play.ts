@@ -66,6 +66,11 @@ export class PlayComponent implements OnInit {
     return activeBox?.position === position && this.gameService.phase() === 'playing';
   }
 
+  isInsuranceBox(position: BoxPosition): boolean {
+    const insuranceBox = this.gameService.insuranceBox();
+    return insuranceBox?.position === position && this.gameService.phase() === 'insurance';
+  }
+
   isActiveHand(position: BoxPosition, handIndex: number): boolean {
     const activeBox = this.gameService.activeBox();
     if (!activeBox || activeBox.position !== position) return false;
