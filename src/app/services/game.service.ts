@@ -3,7 +3,7 @@ import { CardService, Card, Hand } from './card.service';
 import { GameSettingsService } from './game-settings.service';
 import { BalanceService } from './balance.service';
 
-export type GamePhase = 'betting' | 'playing' | 'dealer-turn' | 'resolved';
+export type GamePhase = 'betting' | 'insurance' | 'playing' | 'dealer-turn' | 'resolved';
 export type GameResult = 'win' | 'lose' | 'push' | 'blackjack' | null;
 
 export interface GameState {
@@ -13,6 +13,7 @@ export interface GameState {
   dealerHand: Hand;
   phase: GamePhase;
   currentBet: number;
+  insuranceBet: number;
   result: GameResult;
   message: string;
 }
@@ -31,6 +32,7 @@ const INITIAL_STATE: GameState = {
   },
   phase: 'betting',
   currentBet: 0,
+  insuranceBet: 0,
   result: null,
   message: 'Place your bet to start',
 };
@@ -51,6 +53,7 @@ export class GameService {
   readonly activeHand = computed(() => this._state().playerHands[this._state().activeHandIndex]);
   readonly dealerHand = computed(() => this._state().dealerHand);
   readonly currentBet = computed(() => this._state().currentBet);
+  readonly insuranceBet = computed(() => this._state().insuranceBet);
   readonly result = computed(() => this._state().result);
   readonly message = computed(() => this._state().message);
 
@@ -64,6 +67,20 @@ export class GameService {
     const hand = this.dealerHand();
     if (!hand || hand.cards.length === 0) return 0;
     return this.cardService.calculateHandValue(hand.cards).value;
+  });
+
+  readonly dealerShowsAce = computed(() => {
+    const hand = this.dealerHand();
+    if (!hand || hand.cards.length === 0) return false;
+    return hand.cards[0]?.faceUp && hand.cards[0]?.rank === 'A';
+  });
+
+  readonly canTakeInsurance = computed(() => {
+    const state = this._state();
+    if (state.phase !== 'insurance') return false;
+    if (!this.settingsService.insuranceAllowed()) return false;
+    const maxInsurance = state.currentBet / 2;
+    return this.balanceService.balance() >= maxInsurance;
   });
 
   readonly canHit = computed(() => {
@@ -90,6 +107,7 @@ export class GameService {
     if (!this.settingsService.splitAllowed()) return false;
     const hand = state.playerHands[state.activeHandIndex];
     if (!hand || hand.cards.length !== 2) return false;
+    if (hand.isSplit) return false; // Can't re-split for now
     if (!this.cardService.canSplit(hand.cards)) return false;
     return this.balanceService.balance() >= state.currentBet;
   });
@@ -134,18 +152,71 @@ export class GameService {
     const dealerHand = this.cardService.createEmptyHand();
     dealerHand.cards = [dealerCard1, dealerCard2];
 
+    // Check if dealer shows an Ace and insurance is allowed
+    const dealerShowsAce = dealerCard1.rank === 'A';
+    const insuranceAllowed = this.settingsService.insuranceAllowed();
+    const canAffordInsurance = this.balanceService.balance() >= state.currentBet / 2;
+
+    if (dealerShowsAce && insuranceAllowed && canAffordInsurance) {
+      this._state.update((s) => ({
+        ...s,
+        shoe,
+        playerHands: [playerHand],
+        activeHandIndex: 0,
+        dealerHand,
+        phase: 'insurance',
+        message: 'Dealer shows Ace. Insurance?',
+      }));
+    } else {
+      this._state.update((s) => ({
+        ...s,
+        shoe,
+        playerHands: [playerHand],
+        activeHandIndex: 0,
+        dealerHand,
+        phase: 'playing',
+        message: 'Your turn',
+      }));
+
+      // Check for blackjacks
+      if (this.cardService.isBlackjack(playerHand.cards)) {
+        this.checkBlackjacks();
+      }
+    }
+  }
+
+  takeInsurance(): void {
+    const state = this._state();
+    if (state.phase !== 'insurance') return;
+
+    const insuranceAmount = state.currentBet / 2;
+    if (!this.balanceService.deductBet(insuranceAmount)) return;
+
     this._state.update((s) => ({
       ...s,
-      shoe,
-      playerHands: [playerHand],
-      activeHandIndex: 0,
-      dealerHand,
+      insuranceBet: insuranceAmount,
+      phase: 'playing',
+      message: 'Insurance taken. Your turn.',
+    }));
+
+    // Check for player blackjack
+    if (this.cardService.isBlackjack(state.playerHands[0].cards)) {
+      this.checkBlackjacks();
+    }
+  }
+
+  declineInsurance(): void {
+    const state = this._state();
+    if (state.phase !== 'insurance') return;
+
+    this._state.update((s) => ({
+      ...s,
       phase: 'playing',
       message: 'Your turn',
     }));
 
-    // Check for blackjacks
-    if (this.cardService.isBlackjack(playerHand.cards)) {
+    // Check for player blackjack
+    if (this.cardService.isBlackjack(state.playerHands[0].cards)) {
       this.checkBlackjacks();
     }
   }
@@ -153,22 +224,42 @@ export class GameService {
   private checkBlackjacks(): void {
     const state = this._state();
     const playerHand = state.playerHands[0];
-    const dealerCards = state.dealerHand.cards;
+    const dealerCards = [...state.dealerHand.cards];
 
     const playerHasBlackjack = this.cardService.isBlackjack(playerHand.cards);
 
     // Reveal dealer's hole card
-    dealerCards[1].faceUp = true;
+    dealerCards[1] = { ...dealerCards[1], faceUp: true };
     const dealerHasBlackjack = this.cardService.isBlackjack(dealerCards);
 
+    // Handle insurance payout
+    if (state.insuranceBet > 0 && dealerHasBlackjack) {
+      // Insurance pays 2:1
+      this.balanceService.addWinnings(state.insuranceBet * 3);
+    }
+
+    // Update dealer hand with revealed card
+    this._state.update((s) => ({
+      ...s,
+      dealerHand: { ...s.dealerHand, cards: dealerCards },
+    }));
+
     if (playerHasBlackjack && dealerHasBlackjack) {
-      this.resolveGame('push', 'Both have Blackjack - Push!');
+      const message =
+        state.insuranceBet > 0
+          ? 'Both have Blackjack - Push! Insurance paid.'
+          : 'Both have Blackjack - Push!';
+      this.resolveGame('push', message);
     } else if (playerHasBlackjack) {
       const winnings = state.currentBet + state.currentBet * this.settingsService.blackjackPays();
       this.balanceService.addWinnings(winnings);
       this.resolveGame('blackjack', 'Blackjack! You win!');
     } else if (dealerHasBlackjack) {
-      this.resolveGame('lose', 'Dealer has Blackjack. You lose.');
+      const message =
+        state.insuranceBet > 0
+          ? 'Dealer has Blackjack. Insurance paid!'
+          : 'Dealer has Blackjack. You lose.';
+      this.resolveGame('lose', message);
     }
   }
 
@@ -251,6 +342,38 @@ export class GameService {
     }));
 
     this.moveToNextHand();
+  }
+
+  split(): void {
+    if (!this.canSplit()) return;
+
+    const state = this._state();
+
+    // Deduct bet for second hand
+    if (!this.balanceService.deductBet(state.currentBet)) return;
+
+    let shoe = [...state.shoe];
+    const playerHands = [...state.playerHands];
+    const currentHand = playerHands[state.activeHandIndex];
+
+    // Create two new hands from the split
+    const hand1 = this.cardService.createEmptyHand(currentHand.bet);
+    hand1.cards = [currentHand.cards[0], { ...shoe.pop()!, faceUp: true }];
+    hand1.isSplit = true;
+
+    const hand2 = this.cardService.createEmptyHand(currentHand.bet);
+    hand2.cards = [currentHand.cards[1], { ...shoe.pop()!, faceUp: true }];
+    hand2.isSplit = true;
+
+    // Replace current hand with two split hands
+    playerHands.splice(state.activeHandIndex, 1, hand1, hand2);
+
+    this._state.update((s) => ({
+      ...s,
+      shoe,
+      playerHands,
+      message: 'Split! Playing first hand.',
+    }));
   }
 
   private moveToNextHand(): void {

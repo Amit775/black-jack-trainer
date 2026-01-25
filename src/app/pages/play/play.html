@@ -112,6 +112,29 @@
     </div>
   }
 
+  <!-- Insurance Phase -->
+  @if (gameService.phase() === 'insurance') {
+    <div class="insurance-section">
+      <div class="insurance-prompt">
+        <mat-icon>shield</mat-icon>
+        <span>Dealer shows an Ace. Take Insurance?</span>
+        <span class="insurance-cost"
+          >(Cost: ${{ gameService.currentBet() / 2 | number: '1.2-2' }})</span
+        >
+      </div>
+      <div class="insurance-buttons">
+        <button mat-raised-button color="primary" (click)="takeInsurance()">
+          <mat-icon>check</mat-icon>
+          Yes, Take Insurance
+        </button>
+        <button mat-raised-button color="warn" (click)="declineInsurance()">
+          <mat-icon>close</mat-icon>
+          No Thanks
+        </button>
+      </div>
+    </div>
+  }
+
   <!-- Playing Phase Actions -->
   @if (gameService.phase() === 'playing') {
     <div class="action-buttons">
@@ -136,6 +159,10 @@
       >
         <mat-icon>double_arrow</mat-icon>
         Double Down
+      </button>
+      <button mat-raised-button (click)="split()" [disabled]="!gameService.canSplit()">
+        <mat-icon>call_split</mat-icon>
+        Split
       </button>
     </div>
   }

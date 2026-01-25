@@ -70,6 +70,18 @@ export class PlayComponent implements OnInit {
     this.gameService.doubleDown();
   }
 
+  split(): void {
+    this.gameService.split();
+  }
+
+  takeInsurance(): void {
+    this.gameService.takeInsurance();
+  }
+
+  declineInsurance(): void {
+    this.gameService.declineInsurance();
+  }
+
   newGame(): void {
     this.gameService.newGame();
   }

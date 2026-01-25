@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 import { GameSettingsService, GameSettings } from '../../../services/game-settings.service';
+import { GameService } from '../../../services/game.service';
 
 @Component({
   selector: 'app-settings-dialog',
@@ -28,6 +29,7 @@ import { GameSettingsService, GameSettings } from '../../../services/game-settin
 export class SettingsDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<SettingsDialogComponent>);
   private readonly settingsService = inject(GameSettingsService);
+  private readonly gameService = inject(GameService);
 
   protected settings: GameSettings = { ...this.settingsService.settings() };
 
@@ -39,7 +41,14 @@ export class SettingsDialogComponent {
   ];
 
   save(): void {
+    const deckCountChanged = this.settings.numberOfDecks !== this.settingsService.numberOfDecks();
     this.settingsService.updateSettings(this.settings);
+
+    // Reinitialize shoe if deck count changed
+    if (deckCountChanged) {
+      this.gameService.initializeShoe();
+    }
+
     this.dialogRef.close(true);
   }
 
