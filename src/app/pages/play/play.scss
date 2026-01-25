@@ -1,0 +1,230 @@
+.play-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: calc(100vh - 120px);
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .balance-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 16px;
+    border-radius: 8px;
+
+    mat-icon {
+      color: #ffc107;
+    }
+
+    .balance-amount {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #4caf50;
+    }
+  }
+}
+
+.game-table {
+  flex: 1;
+  background: linear-gradient(135deg, #1a472a 0%, #2d5a3c 50%, #1a472a 100%);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 400px;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.3);
+  border: 4px solid #8b4513;
+}
+
+.dealer-section, .player-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .hand-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+
+    .hand-value {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+  }
+}
+
+.cards-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 120px;
+  align-items: center;
+}
+
+.card {
+  width: 80px;
+  height: 112px;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  color: #333;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+
+  &.red {
+    color: #c62828;
+  }
+
+  &.face-down {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+    
+    .card-back {
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 5px,
+        rgba(255, 255, 255, 0.1) 5px,
+        rgba(255, 255, 255, 0.1) 10px
+      );
+      border-radius: 8px;
+    }
+  }
+
+  .card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    .card-rank {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .card-suit {
+      font-size: 2rem;
+    }
+  }
+}
+
+.game-message {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 16px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+  .win {
+    color: #4caf50;
+  }
+
+  .lose {
+    color: #f44336;
+  }
+
+  .push {
+    color: #ff9800;
+  }
+}
+
+.betting-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+
+  .bet-chips {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    button {
+      width: 64px;
+      height: 64px;
+      font-size: 0.9rem;
+      font-weight: bold;
+
+      &.selected {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(103, 58, 183, 0.6);
+      }
+    }
+  }
+
+  .bet-controls {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+
+    mat-form-field {
+      width: 150px;
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  button {
+    min-width: 140px;
+    height: 48px;
+    font-size: 1rem;
+  }
+}
+
+.result-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  .current-bet {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+.dealer-turn-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

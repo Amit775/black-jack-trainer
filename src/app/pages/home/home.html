@@ -1,0 +1,112 @@
+<div class="home-container">
+  <mat-card class="welcome-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>casino</mat-icon>
+        Welcome to Blackjack Trainer
+      </mat-card-title>
+      <mat-card-subtitle>Master the art of 21</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <p class="welcome-text">
+        Practice your blackjack skills without risking real money. Learn optimal strategy,
+        understand the odds, and become a better player.
+      </p>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="balance-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>account_balance_wallet</mat-icon>
+        Your Balance
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="current-balance">
+        <span class="balance-label">Current Balance:</span>
+        <span class="balance-amount">${{ balanceService.balance() | number: '1.2-2' }}</span>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="balance-actions">
+        <div class="action-group">
+          <h3>Deposit Funds</h3>
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="depositAmount"
+              min="1"
+              placeholder="Enter amount"
+            />
+            <span matTextPrefix>$&nbsp;</span>
+          </mat-form-field>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="deposit()"
+            [disabled]="depositAmount <= 0"
+          >
+            <mat-icon>add</mat-icon>
+            Deposit
+          </button>
+        </div>
+
+        <div class="action-group">
+          <h3>Withdraw Funds</h3>
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="withdrawAmount"
+              min="0"
+              [max]="balanceService.balance()"
+              placeholder="Enter amount"
+            />
+            <span matTextPrefix>$&nbsp;</span>
+          </mat-form-field>
+          <div class="withdraw-buttons">
+            <button
+              mat-raised-button
+              color="accent"
+              (click)="withdraw()"
+              [disabled]="withdrawAmount <= 0 || withdrawAmount > balanceService.balance()"
+            >
+              <mat-icon>remove</mat-icon>
+              Withdraw
+            </button>
+            <button
+              mat-stroked-button
+              (click)="withdrawAll()"
+              [disabled]="balanceService.balance() <= 0"
+            >
+              Withdraw All
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="start-game-section">
+    <button
+      mat-fab
+      extended
+      color="primary"
+      (click)="navigateToPlay()"
+      [disabled]="!balanceService.canPlay()"
+    >
+      <mat-icon>play_arrow</mat-icon>
+      Start Playing
+    </button>
+    @if (!balanceService.canPlay()) {
+      <p class="no-balance-warning">Deposit some funds to start playing</p>
+    }
+  </div>
+</div>

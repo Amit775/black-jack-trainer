@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #1a1a2e;
+}
+
+mat-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  .app-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+
+    mat-icon {
+      color: #4caf50;
+    }
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 8px;
+
+    a {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      &.active {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+}
+
+.main-content {
+  min-height: calc(100vh - 64px);
+}

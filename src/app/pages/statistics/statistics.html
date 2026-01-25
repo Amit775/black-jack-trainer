@@ -1,0 +1,96 @@
+<div class="statistics-container">
+  <mat-card class="stats-overview">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>analytics</mat-icon>
+        Game Statistics
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">Total Games</span>
+          <span class="stat-value">{{ statisticsService.stats().totalGames }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">Wins</span>
+          <span class="stat-value win">{{ statisticsService.stats().wins }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">Losses</span>
+          <span class="stat-value lose">{{ statisticsService.stats().losses }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">Pushes</span>
+          <span class="stat-value push">{{ statisticsService.stats().pushes }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">Blackjacks</span>
+          <span class="stat-value blackjack">{{ statisticsService.stats().blackjacks }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">Win Rate</span>
+          <span class="stat-value">{{ statisticsService.winRate() | number: '1.1-1' }}%</span>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="financial-stats">
+        <div class="stat-item large">
+          <span class="stat-label">Total Wagered</span>
+          <span class="stat-value"
+            >${{ statisticsService.stats().totalWagered | number: '1.2-2' }}</span
+          >
+        </div>
+
+        <div class="stat-item large">
+          <span class="stat-label">Total Won</span>
+          <span class="stat-value win"
+            >${{ statisticsService.stats().totalWon | number: '1.2-2' }}</span
+          >
+        </div>
+
+        <div class="stat-item large">
+          <span class="stat-label">Total Lost</span>
+          <span class="stat-value lose"
+            >${{ statisticsService.stats().totalLost | number: '1.2-2' }}</span
+          >
+        </div>
+
+        <div class="stat-item large highlight">
+          <span class="stat-label">Net Profit/Loss</span>
+          <span
+            class="stat-value"
+            [class.win]="statisticsService.netProfit() >= 0"
+            [class.lose]="statisticsService.netProfit() < 0"
+          >
+            ${{ statisticsService.netProfit() | number: '1.2-2' }}
+          </span>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-button color="warn" (click)="resetStats()">
+        <mat-icon>delete</mat-icon>
+        Reset Statistics
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  @if (statisticsService.stats().totalGames === 0) {
+    <mat-card class="no-data">
+      <mat-card-content>
+        <mat-icon>info</mat-icon>
+        <p>No games played yet. Start playing to see your statistics!</p>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

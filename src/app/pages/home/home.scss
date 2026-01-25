@@ -1,0 +1,106 @@
+.home-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.welcome-card {
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    mat-icon {
+      color: #4caf50;
+    }
+  }
+
+  .welcome-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 16px;
+  }
+}
+
+.balance-card {
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-icon {
+      color: #ffc107;
+    }
+  }
+
+  .current-balance {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    
+    .balance-label {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .balance-amount {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #4caf50;
+    }
+  }
+
+  mat-divider {
+    margin-bottom: 24px;
+  }
+
+  .balance-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+
+    .action-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      mat-form-field {
+        width: 100%;
+      }
+
+      .withdraw-buttons {
+        display: flex;
+        gap: 8px;
+      }
+    }
+  }
+}
+
+.start-game-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+
+  .no-balance-warning {
+    color: #ff9800;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
