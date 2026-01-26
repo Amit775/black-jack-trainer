@@ -1,0 +1,109 @@
+<div class="game-controls">
+  @switch (phase()) {
+    @case ('betting') {
+      <div class="betting-section">
+        <span class="total-bet">
+          Total Bet: <strong>${{ totalBet() | number: '1.2-2' }}</strong>
+        </span>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="emitAction('deal')"
+          [disabled]="!controlsState().canPlaceBets"
+          class="control-btn"
+        >
+          <mat-icon>casino</mat-icon>
+          Deal
+        </button>
+      </div>
+    }
+    @case ('insurance') {
+      @if (insuranceBox(); as box) {
+        <div class="insurance-section">
+          <div class="insurance-prompt">
+            <mat-icon>shield</mat-icon>
+            <span class="insurance-box-label">{{ box.position | titlecase }} Box</span>
+            <span class="insurance-cost">Insurance ${{ insuranceCost() | number: '1.2-2' }}?</span>
+          </div>
+          <div class="insurance-buttons">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="emitAction('insurance-yes')"
+              class="control-btn"
+            >
+              <mat-icon>check</mat-icon>
+              Yes
+            </button>
+            <button
+              mat-raised-button
+              color="warn"
+              (click)="emitAction('insurance-no')"
+              class="control-btn"
+            >
+              <mat-icon>close</mat-icon>
+              No
+            </button>
+          </div>
+        </div>
+      }
+    }
+    @case ('playing') {
+      <div class="action-buttons">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="emitAction('hit')"
+          [disabled]="!controlsState().canHit"
+          class="control-btn"
+        >
+          <mat-icon>add_card</mat-icon>
+          Hit
+        </button>
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="emitAction('stand')"
+          [disabled]="!controlsState().canStand"
+          class="control-btn"
+        >
+          <mat-icon>pan_tool</mat-icon>
+          Stand
+        </button>
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="emitAction('double')"
+          [disabled]="!controlsState().canDoubleDown"
+          class="control-btn"
+        >
+          <mat-icon>double_arrow</mat-icon>
+          Double
+        </button>
+        <button
+          mat-raised-button
+          (click)="emitAction('split')"
+          [disabled]="!controlsState().canSplit"
+          class="control-btn"
+        >
+          <mat-icon>call_split</mat-icon>
+          Split
+        </button>
+      </div>
+    }
+    @case ('resolved') {
+      <div class="result-section">
+        <button mat-raised-button color="primary" (click)="emitAction('new-game')" class="control-btn">
+          <mat-icon>refresh</mat-icon>
+          New Game
+        </button>
+      </div>
+    }
+    @case ('dealer-turn') {
+      <div class="dealer-turn-indicator">
+        <mat-icon class="spinning">autorenew</mat-icon>
+        <span>Dealer is playing...</span>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,9 @@
+<div class="game-header">
+  <div class="balance-display">
+    <mat-icon>account_balance_wallet</mat-icon>
+    <span class="balance-amount">${{ balance() | number: '1.2-2' }}</span>
+  </div>
+  <button mat-icon-button (click)="onSettingsClick()" matTooltip="Game Settings">
+    <mat-icon>settings</mat-icon>
+  </button>
+</div>

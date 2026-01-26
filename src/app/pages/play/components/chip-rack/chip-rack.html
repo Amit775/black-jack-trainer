@@ -1,0 +1,16 @@
+<div class="chip-rack-area">
+  <div class="chip-rack">
+    <div class="chips-row">
+      @for (chip of chips; track chip) {
+        <button
+          class="chip-btn chip-{{ chip }}"
+          [disabled]="!canAddChip(chip)"
+          (click)="selectChip(chip)"
+          [matTooltip]="'Add $' + chip"
+        >
+          <span class="chip-value">${{ chip }}</span>
+        </button>
+      }
+    </div>
+  </div>
+</div>

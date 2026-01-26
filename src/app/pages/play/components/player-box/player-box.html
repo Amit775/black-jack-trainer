@@ -1,0 +1,100 @@
+<div
+  class="player-box"
+  (click)="onBoxClick()"
+  [class.clickable]="isBetting()"
+>
+  @if (isBetting()) {
+    <!-- Betting phase: show chips and total -->
+    <div class="box-bet-content">
+      <div class="box-chips-display">
+        @for (chipValue of chipsForBet(); track $index) {
+          <button
+            class="display-chip chip-{{ chipValue }}"
+            (click)="onChipRemove(chipValue, $event)"
+            [matTooltip]="'Remove $' + chipValue"
+          >
+            <span class="chip-value">${{ chipValue }}</span>
+          </button>
+        }
+        @if (bet() === 0) {
+          <span class="no-bet-text">Click to select</span>
+        }
+      </div>
+      @if (bet() > 0) {
+        <div class="box-total-bet">${{ bet() }}</div>
+      }
+    </div>
+  } @else {
+    <!-- Playing phase: show hands -->
+    <div class="box-hands">
+      @for (hand of hands(); track $index; let handIdx = $index) {
+        <div
+          class="hand-container"
+          [class.active-hand]="isActiveHand(handIdx)"
+          [class.split-hand]="hand.isSplit"
+          [class.result-win]="hand.result === 'win' || hand.result === 'blackjack'"
+          [class.result-lose]="hand.result === 'lose'"
+          [class.result-push]="hand.result === 'push'"
+        >
+          <div class="hand-info">
+            @if (hand.cards.length > 0) {
+              <span class="hand-value-badge">{{ getHandValue(hand) }}</span>
+            }
+            @if (hand.isSplit) {
+              <span class="split-badge">Split {{ handIdx + 1 }}</span>
+            }
+          </div>
+          <div class="cards-row">
+            @for (card of hand.cards; track card.id) {
+              <div
+                class="card"
+                [class.red]="isRed(card)"
+                [class.card-dealing]="card.animationState === 'dealing'"
+                [class.card-revealing]="card.animationState === 'revealing'"
+                [class.card-split-left]="card.animationState === 'split-left'"
+                [class.card-split-right]="card.animationState === 'split-right'"
+                [style.animation-delay.ms]="card.animationDelay || 0"
+              >
+                @if (card.animationState === 'revealing') {
+                  <div class="card-flip-container">
+                    <div class="card-flip-back"></div>
+                    <div class="card-flip-front" [class.red]="isRed(card)">
+                      <span class="card-rank">{{ card.rank }}</span>
+                      <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
+                    </div>
+                  </div>
+                } @else if (card.faceUp) {
+                  <div class="card-content">
+                    <span class="card-rank">{{ card.rank }}</span>
+                    <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
+                  </div>
+                } @else {
+                  <div class="card-back"></div>
+                }
+              </div>
+            }
+          </div>
+          <div class="bet-display">
+            <span class="bet-chip">${{ hand.bet }}</span>
+            @if (hand.result) {
+              <span class="result-badge" [class]="hand.result">
+                {{ getResultText(hand.result) }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+  @if (isBetting() && !isCenter()) {
+    <button
+      mat-mini-fab
+      color="warn"
+      (click)="onRemoveBox($event)"
+      matTooltip="Remove box"
+      class="remove-box-btn"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  }
+</div>

@@ -1,0 +1,47 @@
+<div class="table-accessories">
+  <!-- Card Shoe (right side of dealer) -->
+  <div class="shoe-container" matTooltip="Card Shoe">
+    <div class="shoe">
+      <div class="shoe-cards">
+        @for (i of shoeCardLayers(); track i) {
+          <div
+            class="shoe-card-layer"
+            [style.--layer-index]="i"
+            [class.past-cut-card]="isLayerPastCutCard(i)"
+          ></div>
+        }
+      </div>
+      <!-- Cut Card Indicator -->
+      <div
+        class="cut-card"
+        [style.--cut-position]="cutCardVisualPosition()"
+        matTooltip="Cut Card"
+      ></div>
+    </div>
+    <div class="shoe-info">
+      <span class="cards-remaining">{{ cardsInShoe() }}</span>
+      <span class="cards-label">cards</span>
+    </div>
+  </div>
+
+  <!-- Discard Tray (left side of dealer) -->
+  <div class="discard-tray-container" matTooltip="Discard Tray">
+    <div class="discard-tray" [class.has-cards]="hasDiscards()">
+      @for (i of discardLayers(); track i) {
+        <div class="discard-card-layer" [style.--layer-index]="i"></div>
+      }
+    </div>
+    <div class="discard-info">
+      <span class="cards-count">{{ discardCount() }}</span>
+      <span class="cards-label">discards</span>
+    </div>
+  </div>
+
+  <!-- Shuffle Indicator -->
+  @if (shuffleNeeded()) {
+    <div class="shuffle-indicator">
+      <mat-icon>shuffle</mat-icon>
+      <span>Shuffle after this hand</span>
+    </div>
+  }
+</div>
