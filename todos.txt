@@ -1,0 +1,44 @@
+# Black Jack Trainer - Future Tasks
+
+## Phase 2: Animation Management
+- [ ] Extract animation timing constants to a central config
+- [ ] Create AnimationCoordinatorService or utility
+- [ ] Remove setTimeout calls from store methods
+- [ ] Implement animation-aware state transitions
+- [ ] Consider using Angular Animations or RxJS timers for better control
+
+## Phase 3: Unit Testing
+- [ ] Add unit tests for card.utils.ts (pure functions - easy to test)
+- [ ] Add unit tests for each store feature in isolation
+- [ ] Test balance feature: deposit, withdraw, deductBet, addWinnings
+- [ ] Test settings feature: updateSettings, resetToDefaults
+- [ ] Test shoe feature: initializeShoe, dealCard, reshuffle
+- [ ] Test game feature: hit, stand, doubleDown, split, insurance flow
+- [ ] Test computed signals (canHit, canStand, canDoubleDown, canSplit)
+- [ ] Add integration tests for full game flows
+- [ ] Consider using @ngrx/signals testing utilities
+
+## Phase 4: LocalStorage Persistence
+- [ ] Create withPersistence store feature or utility
+- [ ] Persist balance across sessions
+- [ ] Persist game settings across sessions
+- [ ] Persist statistics and game history
+- [ ] Handle migration when state shape changes
+- [ ] Add clear/reset functionality for persisted data
+- [ ] Consider using a storage abstraction for testability
+
+## Phase 5: Statistics Integration
+- [ ] Create withStatistics store feature
+- [ ] Track wins, losses, pushes, blackjacks per session
+- [ ] Calculate win rate, net profit, average bet
+- [ ] Record game history with timestamps
+- [ ] Display statistics in dedicated page
+- [ ] Persist statistics to localStorage
+
+## Technical Debt
+- [x] Remove deprecated services after migration (BalanceService, GameSettingsService, GameService, CardService)
+- [x] Consolidate types in shared/models.ts as single source of truth
+- [x] Use constants (SUITS, RANKS) to derive types
+- [ ] Clean up unused imports across components
+- [ ] Add JSDoc comments to store methods
+- [ ] Review and optimize computed signal dependencies

@@ -4,9 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { GameService } from '../../services/game.service';
-import { BalanceService } from '../../services/balance.service';
-import { BoxPosition } from '../../services/card.service';
+import { BlackjackStore, BoxPosition } from '../../store';
 import { GameAction, ChipDenomination } from '../../shared/models';
 import { SettingsDialogComponent } from './settings-dialog/settings-dialog';
 import {
@@ -42,8 +40,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayComponent implements OnInit {
-  protected readonly gameService = inject(GameService);
-  protected readonly balanceService = inject(BalanceService);
+  protected readonly store = inject(BlackjackStore);
   private readonly dialog = inject(MatDialog);
 
   protected readonly defaultBet = 10;
@@ -52,31 +49,31 @@ export class PlayComponent implements OnInit {
   protected readonly boxPositions: BoxPosition[] = ['left', 'center', 'right'];
 
   // Computed signals for template
-  protected readonly balance = computed(() => this.balanceService.balance());
-  protected readonly phase = computed(() => this.gameService.phase());
-  protected readonly boxes = computed(() => this.gameService.boxes());
-  protected readonly dealerHand = computed(() => this.gameService.dealerHand());
-  protected readonly dealerHandValue = computed(() => this.gameService.dealerHandValue());
-  protected readonly shoeState = computed(() => this.gameService.shoeState());
-  protected readonly cardsInShoe = computed(() => this.gameService.shoe().length);
-  protected readonly discardTray = computed(() => this.gameService.discardTray());
-  protected readonly totalBet = computed(() => this.gameService.currentBet());
-  protected readonly insuranceBox = computed(() => this.gameService.insuranceBox());
-  protected readonly message = computed(() => this.gameService.message());
-  protected readonly result = computed(() => this.gameService.result());
+  protected readonly balance = computed(() => this.store.balance());
+  protected readonly phase = computed(() => this.store.phase());
+  protected readonly boxes = computed(() => this.store.boxes());
+  protected readonly dealerHand = computed(() => this.store.dealerHand());
+  protected readonly dealerHandValue = computed(() => this.store.dealerHandValue());
+  protected readonly shoeState = computed(() => this.store.shoeState());
+  protected readonly cardsInShoe = computed(() => this.store.shoe().length);
+  protected readonly discardTray = computed(() => this.store.discardTray());
+  protected readonly totalBet = computed(() => this.store.currentBet());
+  protected readonly insuranceBox = computed(() => this.store.insuranceBox());
+  protected readonly message = computed(() => this.store.message());
+  protected readonly result = computed(() => this.store.result());
 
   protected readonly controlsState = computed<GameControlsState>(() => ({
-    canHit: this.gameService.canHit() ?? false,
-    canStand: this.gameService.canStand() ?? false,
-    canDoubleDown: this.gameService.canDoubleDown() ?? false,
-    canSplit: this.gameService.canSplit() ?? false,
+    canHit: this.store.canHit() ?? false,
+    canStand: this.store.canStand() ?? false,
+    canDoubleDown: this.store.canDoubleDown() ?? false,
+    canSplit: this.store.canSplit() ?? false,
     canPlaceBets: this.canPlaceBets(),
   }));
 
   ngOnInit(): void {
-    this.gameService.initializeShoe();
-    this.gameService.newGame();
-    this.gameService.setBoxBet('center', this.defaultBet);
+    // Store initializes shoe in onInit hook
+    this.store.newGame();
+    this.store.setBoxBet('center', this.defaultBet);
   }
 
   // Box helpers
@@ -85,12 +82,12 @@ export class PlayComponent implements OnInit {
   }
 
   protected isActiveBox(position: BoxPosition): boolean {
-    const activeBox = this.gameService.activeBox();
+    const activeBox = this.store.activeBox();
     return activeBox?.position === position && this.phase() === 'playing';
   }
 
   protected isInsuranceBox(position: BoxPosition): boolean {
-    const insuranceBox = this.gameService.insuranceBox();
+    const insuranceBox = this.store.insuranceBox();
     return insuranceBox?.position === position && this.phase() === 'insurance';
   }
 
@@ -114,29 +111,29 @@ export class PlayComponent implements OnInit {
   protected onChipRemoved(event: ChipRemoveEvent): void {
     const box = this.getBox(event.position);
     if (box?.isActive && box.bet >= event.chipValue) {
-      this.gameService.setBoxBet(event.position, box.bet - event.chipValue);
+      this.store.setBoxBet(event.position, box.bet - event.chipValue);
     }
   }
 
   protected onBoxRemoved(event: PlayerBoxEvent): void {
-    this.gameService.toggleBox(event.position);
+    this.store.toggleBox(event.position);
   }
 
   protected onChipSelected(chip: ChipDenomination): void {
     const box = this.getBox(this.selectedBoxPosition);
     if (box?.isActive) {
-      this.gameService.setBoxBet(this.selectedBoxPosition, box.bet + chip);
+      this.store.setBoxBet(this.selectedBoxPosition, box.bet + chip);
     }
   }
 
   protected onToggleBox(position: BoxPosition): void {
     const wasActive = this.getBox(position)?.isActive;
-    this.gameService.toggleBox(position);
+    this.store.toggleBox(position);
     const box = this.getBox(position);
     if (box?.isActive && !wasActive) {
       this.selectedBoxPosition = position;
       if (box.bet === 0) {
-        this.gameService.setBoxBet(position, this.defaultBet);
+        this.store.setBoxBet(position, this.defaultBet);
       }
     }
   }
@@ -144,28 +141,28 @@ export class PlayComponent implements OnInit {
   protected onActionTriggered(action: GameAction): void {
     switch (action) {
       case 'hit':
-        this.gameService.hit();
+        this.store.hit();
         break;
       case 'stand':
-        this.gameService.stand();
+        this.store.stand();
         break;
       case 'double':
-        this.gameService.doubleDown();
+        this.store.doubleDown();
         break;
       case 'split':
-        this.gameService.split();
+        this.store.split();
         break;
       case 'insurance-yes':
-        this.gameService.takeInsurance();
+        this.store.takeInsurance();
         break;
       case 'insurance-no':
-        this.gameService.declineInsurance();
+        this.store.declineInsurance();
         break;
       case 'deal':
-        this.gameService.placeBets();
+        this.store.placeBets();
         break;
       case 'new-game':
-        this.gameService.newGame();
+        this.store.newGame();
         break;
     }
   }

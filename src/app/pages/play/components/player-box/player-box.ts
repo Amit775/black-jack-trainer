@@ -9,6 +9,8 @@ import {
   Hand,
   Card,
   GamePhase,
+  Suit,
+  HandResult,
   SUIT_SYMBOLS,
   RESULT_TEXT,
 } from '../../../../shared/models';
@@ -78,12 +80,12 @@ export class PlayerBoxComponent {
     return chips;
   });
 
-  protected getSuitSymbol(suit: string): string {
-    return SUIT_SYMBOLS[suit] || '';
+  protected getSuitSymbol(suit: Suit): string {
+    return SUIT_SYMBOLS[suit];
   }
 
-  protected getResultText(result: string): string {
-    return RESULT_TEXT[result] || '';
+  protected getResultText(result: HandResult): string {
+    return RESULT_TEXT[result];
   }
 
   protected isRed(card: Card): boolean {

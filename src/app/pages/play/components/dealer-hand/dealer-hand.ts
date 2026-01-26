@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Hand, Card, SUIT_SYMBOLS } from '../../../../shared/models';
+import { Hand, Card, Suit, SUIT_SYMBOLS } from '../../../../shared/models';
 
 @Component({
   selector: 'app-dealer-hand',
@@ -21,8 +21,8 @@ export class DealerHandComponent {
     return this.hand().cards.length > 0 && this.handValue() > 0;
   });
 
-  protected getSuitSymbol(suit: string): string {
-    return SUIT_SYMBOLS[suit] || '';
+  protected getSuitSymbol(suit: Suit): string {
+    return SUIT_SYMBOLS[suit];
   }
 
   protected isRed(card: Card): boolean {

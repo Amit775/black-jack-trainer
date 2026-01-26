@@ -7,8 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
-import { GameSettingsService, GameSettings } from '../../../services/game-settings.service';
-import { GameService } from '../../../services/game.service';
+import { BlackjackStore, GameSettings } from '../../../store';
 
 @Component({
   selector: 'app-settings-dialog',
@@ -28,10 +27,9 @@ import { GameService } from '../../../services/game.service';
 })
 export class SettingsDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<SettingsDialogComponent>);
-  private readonly settingsService = inject(GameSettingsService);
-  private readonly gameService = inject(GameService);
+  private readonly store = inject(BlackjackStore);
 
-  protected settings: GameSettings = { ...this.settingsService.settings() };
+  protected settings: GameSettings = { ...this.store.settings() };
 
   protected readonly deckOptions = [1, 2, 4, 6, 8];
   protected readonly blackjackPayOptions = [
@@ -41,12 +39,12 @@ export class SettingsDialogComponent {
   ];
 
   save(): void {
-    const deckCountChanged = this.settings.numberOfDecks !== this.settingsService.numberOfDecks();
-    this.settingsService.updateSettings(this.settings);
+    const deckCountChanged = this.settings.numberOfDecks !== this.store.numberOfDecks();
+    this.store.updateSettings(this.settings);
 
     // Reinitialize shoe if deck count changed
     if (deckCountChanged) {
-      this.gameService.initializeShoe();
+      this.store.initializeShoe(this.settings.numberOfDecks);
     }
 
     this.dialogRef.close(true);
@@ -57,7 +55,7 @@ export class SettingsDialogComponent {
   }
 
   resetDefaults(): void {
-    this.settingsService.resetToDefaults();
-    this.settings = { ...this.settingsService.settings() };
+    this.store.resetSettings();
+    this.settings = { ...this.store.settings() };
   }
 }

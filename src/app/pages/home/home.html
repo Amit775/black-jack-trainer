@@ -27,7 +27,7 @@
     <mat-card-content>
       <div class="current-balance">
         <span class="balance-label">Current Balance:</span>
-        <span class="balance-amount">${{ balanceService.balance() | number: '1.2-2' }}</span>
+        <span class="balance-amount">${{ balance() | number: '1.2-2' }}</span>
       </div>
 
       <mat-divider></mat-divider>
@@ -66,7 +66,7 @@
               type="number"
               [(ngModel)]="withdrawAmount"
               min="0"
-              [max]="balanceService.balance()"
+              [max]="balance()"
               placeholder="Enter amount"
             />
             <span matTextPrefix>$&nbsp;</span>
@@ -76,7 +76,7 @@
               mat-raised-button
               color="accent"
               (click)="withdraw()"
-              [disabled]="withdrawAmount <= 0 || withdrawAmount > balanceService.balance()"
+              [disabled]="withdrawAmount <= 0 || withdrawAmount > balance()"
             >
               <mat-icon>remove</mat-icon>
               Withdraw
@@ -84,7 +84,7 @@
             <button
               mat-stroked-button
               (click)="withdrawAll()"
-              [disabled]="balanceService.balance() <= 0"
+              [disabled]="balance() <= 0"
             >
               Withdraw All
             </button>
@@ -100,12 +100,12 @@
       extended
       color="primary"
       (click)="navigateToPlay()"
-      [disabled]="!balanceService.canPlay()"
+      [disabled]="!store.canPlay()"
     >
       <mat-icon>play_arrow</mat-icon>
       Start Playing
     </button>
-    @if (!balanceService.canPlay()) {
+    @if (!store.canPlay()) {
       <p class="no-balance-warning">Deposit some funds to start playing</p>
     }
   </div>

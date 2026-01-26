@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { GameResult } from './game.service';
+import { GameResult } from '../shared/models';
 
 export interface GameRecord {
   date: Date;
