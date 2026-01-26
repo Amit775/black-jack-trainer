@@ -1,5 +1,11 @@
 import { computed } from '@angular/core';
-import { signalStoreFeature, withComputed, withMethods, withState, patchState } from '@ngrx/signals';
+import {
+  signalStoreFeature,
+  withComputed,
+  withMethods,
+  withState,
+  patchState,
+} from '@ngrx/signals';
 import { BalanceState } from '../models';
 
 const INITIAL_BALANCE_STATE: BalanceState = {

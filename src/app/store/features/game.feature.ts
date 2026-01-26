@@ -60,20 +60,22 @@ const DELAY_BETWEEN_DEALER_CARDS = 500;
 export function withGame() {
   return signalStoreFeature(
     // Require these slices to exist in the store
-    { state: type<{
-      balance: number;
-      shoe: Card[];
-      shoeState: ShoeState;
-      discardTray: Card[];
-      settings: {
-        numberOfDecks: number;
-        dealerHitsSoft17: boolean;
-        blackjackPays: number;
-        doubleDownAllowed: boolean;
-        splitAllowed: boolean;
-        insuranceAllowed: boolean;
-      };
-    }>() },
+    {
+      state: type<{
+        balance: number;
+        shoe: Card[];
+        shoeState: ShoeState;
+        discardTray: Card[];
+        settings: {
+          numberOfDecks: number;
+          dealerHitsSoft17: boolean;
+          blackjackPays: number;
+          doubleDownAllowed: boolean;
+          splitAllowed: boolean;
+          insuranceAllowed: boolean;
+        };
+      }>(),
+    },
 
     withState(INITIAL_GAME_STATE),
 
@@ -98,14 +100,14 @@ export function withGame() {
 
       // Bet calculations
       const currentBet = computed(() =>
-        store.boxes().reduce((total, box) => total + (box.isActive ? box.bet : 0), 0)
+        store.boxes().reduce((total, box) => total + (box.isActive ? box.bet : 0), 0),
       );
 
       const totalBetsPlaced = computed(() =>
         store.boxes().reduce((total, box) => {
           if (!box.isActive) return total;
           return total + box.hands.reduce((handTotal, hand) => handTotal + hand.bet, 0);
-        }, 0)
+        }, 0),
       );
 
       // Hand value calculations
@@ -249,7 +251,13 @@ export function withGame() {
         dealerHand.cards = dealerHand.cards.map((c, index) => {
           if (index === 0) return { ...c, isRevealed: true };
           if (index === 1 && !c.faceUp) {
-            return { ...c, faceUp: true, animationState: 'revealing' as const, animationDelay: 0, isRevealed: false };
+            return {
+              ...c,
+              faceUp: true,
+              animationState: 'revealing' as const,
+              animationDelay: 0,
+              isRevealed: false,
+            };
           }
           return { ...c, faceUp: true };
         });
@@ -261,7 +269,7 @@ export function withGame() {
           patchState(store, (s) => {
             const hand = { ...s.dealerHand };
             hand.cards = hand.cards.map((c, index) =>
-              index === 1 ? { ...c, animationState: 'dealt' as const, isRevealed: true } : c
+              index === 1 ? { ...c, animationState: 'dealt' as const, isRevealed: true } : c,
             );
             return { ...s, dealerHand: hand };
           });
@@ -297,7 +305,9 @@ export function withGame() {
           patchState(store, (s) => {
             const hand = { ...s.dealerHand };
             hand.cards = hand.cards.map((c, index) =>
-              index === hand.cards.length - 1 ? { ...c, animationState: 'dealt' as const, isRevealed: true } : c
+              index === hand.cards.length - 1
+                ? { ...c, animationState: 'dealt' as const, isRevealed: true }
+                : c,
             );
             return { ...s, dealerHand: hand };
           });
@@ -396,7 +406,12 @@ export function withGame() {
             message: `Insurance for ${nextBox.position} box? (Cost: $${(nextBox.bet / 2).toFixed(2)})`,
           });
         } else {
-          patchState(store, { boxes, insuranceBoxIndex: -1, phase: 'playing', message: 'Your turn' });
+          patchState(store, {
+            boxes,
+            insuranceBoxIndex: -1,
+            phase: 'playing',
+            message: 'Your turn',
+          });
           checkInitialBlackjacks();
         }
       };
@@ -432,7 +447,11 @@ export function withGame() {
             } else {
               const winnings = hand.bet + hand.bet * store.settings().blackjackPays;
               patchState(store, { balance: store.balance() + winnings });
-              return { ...box, hands: [{ ...hand, result: 'blackjack' as const }], isResolved: true };
+              return {
+                ...box,
+                hands: [{ ...hand, result: 'blackjack' as const }],
+                isResolved: true,
+              };
             }
           } else if (dealerHasBlackjack) {
             return { ...box, hands: [{ ...hand, result: 'lose' as const }], isResolved: true };
@@ -483,7 +502,7 @@ export function withGame() {
                 return { ...box, isActive: !box.isActive, bet: box.isActive ? 0 : box.bet };
               }
               return box;
-            })
+            }),
           );
         },
 
@@ -502,7 +521,7 @@ export function withGame() {
           if (otherBoxesBet + amount > store.balance()) return;
 
           updateBoxes((boxes) =>
-            boxes.map((b) => (b.position === position ? { ...b, bet: amount } : b))
+            boxes.map((b) => (b.position === position ? { ...b, bet: amount } : b)),
           );
         },
 
@@ -658,7 +677,11 @@ export function withGame() {
           const currentHand = box.hands[box.activeHandIndex];
 
           const hand1 = createEmptyHand(currentHand.bet);
-          const splitCard1: Card = { ...currentHand.cards[0], animationState: 'split-left', animationDelay: 0 };
+          const splitCard1: Card = {
+            ...currentHand.cards[0],
+            animationState: 'split-left',
+            animationDelay: 0,
+          };
           let result = dealCardFromShoe(shoe, shoeState, SPLIT_DELAY_MS + DEAL_DELAY_MS);
           shoe = result.shoe;
           shoeState = result.shoeState;
@@ -666,7 +689,11 @@ export function withGame() {
           hand1.isSplit = true;
 
           const hand2 = createEmptyHand(currentHand.bet);
-          const splitCard2: Card = { ...currentHand.cards[1], animationState: 'split-right', animationDelay: 0 };
+          const splitCard2: Card = {
+            ...currentHand.cards[1],
+            animationState: 'split-right',
+            animationDelay: 0,
+          };
           result = dealCardFromShoe(shoe, shoeState, SPLIT_DELAY_MS + DEAL_DELAY_MS * 2);
           shoe = result.shoe;
           shoeState = result.shoeState;
@@ -695,7 +722,10 @@ export function withGame() {
 
           let shoe = [...store.shoe()];
           let shoeState = { ...store.shoeState() };
-          let discardTray = [...store.discardTray(), ...cardsToDiscard.map((c) => ({ ...c, faceUp: false }))];
+          let discardTray = [
+            ...store.discardTray(),
+            ...cardsToDiscard.map((c) => ({ ...c, faceUp: false })),
+          ];
 
           if (shoeState.shuffleNeeded || shoe.length < 52) {
             shoe = createShoe(store.settings().numberOfDecks);
@@ -817,7 +847,7 @@ export function withGame() {
         const dealerShowsAce = dealerCard1.rank === 'A';
         const insuranceAllowed = store.settings().insuranceAllowed;
         const anyBoxCanAffordInsurance = boxesWithSecondCard.some(
-          (box) => box.isActive && store.balance() >= box.bet / 2
+          (box) => box.isActive && store.balance() >= box.bet / 2,
         );
 
         if (dealerShowsAce && insuranceAllowed && anyBoxCanAffordInsurance) {

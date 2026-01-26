@@ -231,7 +231,4 @@ export interface GameSliceState {
 }
 
 export interface BlackjackStoreState
-  extends BalanceState,
-    SettingsState,
-    ShoeSliceState,
-    GameSliceState {}
+  extends BalanceState, SettingsState, ShoeSliceState, GameSliceState {}

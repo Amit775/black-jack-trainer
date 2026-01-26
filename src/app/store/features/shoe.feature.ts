@@ -1,5 +1,11 @@
 import { computed } from '@angular/core';
-import { signalStoreFeature, withComputed, withMethods, withState, patchState } from '@ngrx/signals';
+import {
+  signalStoreFeature,
+  withComputed,
+  withMethods,
+  withState,
+  patchState,
+} from '@ngrx/signals';
 import { Card, ShoeState, ShoeSliceState, INITIAL_SHOE_STATE } from '../models';
 import { createShoe } from '../utils/card.utils';
 
@@ -99,10 +105,7 @@ export function withShoe() {
 
       addToDiscardTray(cards: Card[]): void {
         patchState(store, {
-          discardTray: [
-            ...store.discardTray(),
-            ...cards.map((c) => ({ ...c, faceUp: false })),
-          ],
+          discardTray: [...store.discardTray(), ...cards.map((c) => ({ ...c, faceUp: false }))],
         });
       },
 

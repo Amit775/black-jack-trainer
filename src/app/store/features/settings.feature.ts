@@ -1,5 +1,11 @@
 import { computed } from '@angular/core';
-import { signalStoreFeature, withComputed, withMethods, withState, patchState } from '@ngrx/signals';
+import {
+  signalStoreFeature,
+  withComputed,
+  withMethods,
+  withState,
+  patchState,
+} from '@ngrx/signals';
 import { GameSettings, SettingsState, DEFAULT_SETTINGS } from '../models';
 
 const INITIAL_SETTINGS_STATE: SettingsState = {

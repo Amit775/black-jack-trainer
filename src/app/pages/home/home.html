@@ -81,11 +81,7 @@
               <mat-icon>remove</mat-icon>
               Withdraw
             </button>
-            <button
-              mat-stroked-button
-              (click)="withdrawAll()"
-              [disabled]="balance() <= 0"
-            >
+            <button mat-stroked-button (click)="withdrawAll()" [disabled]="balance() <= 0">
               Withdraw All
             </button>
           </div>
