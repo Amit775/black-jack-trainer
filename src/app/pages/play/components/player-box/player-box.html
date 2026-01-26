@@ -1,8 +1,4 @@
-<div
-  class="player-box"
-  (click)="onBoxClick()"
-  [class.clickable]="isBetting()"
->
+<div class="player-box" (click)="onBoxClick()" [class.clickable]="isBetting()">
   @if (isBetting()) {
     <!-- Betting phase: show chips and total -->
     <div class="box-bet-content">

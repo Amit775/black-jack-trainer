@@ -14,7 +14,7 @@ import { ChipDenomination, CHIP_DENOMINATIONS } from '../../../../shared/models'
 export class ChipRackComponent {
   /** Current player balance to determine if chips can be added */
   readonly balance = input.required<number>();
-  
+
   /** Current total bet across all active boxes */
   readonly currentTotalBet = input.required<number>();
 

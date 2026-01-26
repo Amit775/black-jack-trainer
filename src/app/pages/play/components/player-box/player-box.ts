@@ -3,7 +3,15 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Box, BoxPosition, Hand, Card, GamePhase, SUIT_SYMBOLS, RESULT_TEXT } from '../../../../shared/models';
+import {
+  Box,
+  BoxPosition,
+  Hand,
+  Card,
+  GamePhase,
+  SUIT_SYMBOLS,
+  RESULT_TEXT,
+} from '../../../../shared/models';
 
 export interface PlayerBoxEvent {
   position: BoxPosition;

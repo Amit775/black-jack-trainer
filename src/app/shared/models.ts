@@ -4,7 +4,15 @@
  */
 
 // Re-export types from card.service
-export type { Suit, Rank, BoxPosition, CardAnimationState, Card, Hand, Box } from '../services/card.service';
+export type {
+  Suit,
+  Rank,
+  BoxPosition,
+  CardAnimationState,
+  Card,
+  Hand,
+  Box,
+} from '../services/card.service';
 
 // Re-export types from game.service
 export type { GamePhase, GameResult, ShoeState, GameState } from '../services/game.service';
@@ -13,19 +21,19 @@ export type { GamePhase, GameResult, ShoeState, GameState } from '../services/ga
  * Available chip denominations for betting
  */
 export const CHIP_DENOMINATIONS = [5, 10, 25, 50, 100] as const;
-export type ChipDenomination = typeof CHIP_DENOMINATIONS[number];
+export type ChipDenomination = (typeof CHIP_DENOMINATIONS)[number];
 
 /**
  * Game action types for the controls component
  */
-export type GameAction = 
-  | 'hit' 
-  | 'stand' 
-  | 'double' 
-  | 'split' 
-  | 'insurance-yes' 
-  | 'insurance-no' 
-  | 'deal' 
+export type GameAction =
+  | 'hit'
+  | 'stand'
+  | 'double'
+  | 'split'
+  | 'insurance-yes'
+  | 'insurance-no'
+  | 'deal'
   | 'new-game';
 
 /**

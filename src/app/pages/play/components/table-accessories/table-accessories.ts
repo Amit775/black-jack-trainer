@@ -30,10 +30,7 @@ export class TableAccessoriesComponent {
     const state = this.shoeState();
     const remainingCards = state.totalCards - state.cardsDealt;
     const maxLayers = 20;
-    const layers = Math.min(
-      Math.ceil(remainingCards / (state.totalCards / maxLayers)),
-      maxLayers
-    );
+    const layers = Math.min(Math.ceil(remainingCards / (state.totalCards / maxLayers)), maxLayers);
     return Array.from({ length: layers }, (_, i) => i);
   });
 

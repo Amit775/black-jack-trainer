@@ -93,7 +93,12 @@
     }
     @case ('resolved') {
       <div class="result-section">
-        <button mat-raised-button color="primary" (click)="emitAction('new-game')" class="control-btn">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="emitAction('new-game')"
+          class="control-btn"
+        >
           <mat-icon>refresh</mat-icon>
           New Game
         </button>
