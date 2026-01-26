@@ -40,6 +40,7 @@ export class PlayComponent implements OnInit {
 
   protected readonly betChips = [5, 10, 25, 50, 100];
   protected readonly defaultBet = 10;
+  protected selectedBoxPosition: BoxPosition = 'center';
 
   ngOnInit(): void {
     this.gameService.initializeShoe();
@@ -54,10 +55,17 @@ export class PlayComponent implements OnInit {
   }
 
   toggleBox(position: BoxPosition): void {
+    const wasActive = this.getBox(position)?.isActive;
     this.gameService.toggleBox(position);
     const box = this.getBox(position);
-    if (box?.isActive && box.bet === 0) {
-      this.gameService.setBoxBet(position, this.defaultBet);
+    if (box?.isActive) {
+      // Newly activated box
+      if (!wasActive) {
+        this.selectedBoxPosition = position;
+        if (box.bet === 0) {
+          this.gameService.setBoxBet(position, this.defaultBet);
+        }
+      }
     }
   }
 
@@ -78,7 +86,45 @@ export class PlayComponent implements OnInit {
     return activeBox.activeHandIndex === handIndex;
   }
 
+  // Box selection for betting
+  selectBox(position: BoxPosition): void {
+    const box = this.getBox(position);
+    if (box?.isActive) {
+      this.selectedBoxPosition = position;
+    }
+  }
+
+  isSelectedBox(position: BoxPosition): boolean {
+    return this.selectedBoxPosition === position && this.gameService.phase() === 'betting';
+  }
+
+  getSelectedBox(): Box | undefined {
+    return this.getBox(this.selectedBoxPosition);
+  }
+
   // Betting
+  addChipToSelectedBox(amount: number): void {
+    const box = this.getSelectedBox();
+    if (box?.isActive) {
+      this.gameService.setBoxBet(this.selectedBoxPosition, box.bet + amount);
+    }
+  }
+
+  removeChipFromBox(position: BoxPosition, chipValue: number, event: Event): void {
+    event.stopPropagation(); // Prevent selecting the box
+    const box = this.getBox(position);
+    if (box?.isActive && box.bet >= chipValue) {
+      this.gameService.setBoxBet(position, box.bet - chipValue);
+    }
+  }
+
+  clearSelectedBoxBet(): void {
+    const box = this.getSelectedBox();
+    if (box?.isActive) {
+      this.gameService.setBoxBet(this.selectedBoxPosition, 0);
+    }
+  }
+
   selectBetChip(position: BoxPosition, amount: number): void {
     this.gameService.setBoxBet(position, amount);
   }
@@ -102,6 +148,11 @@ export class PlayComponent implements OnInit {
     if (!box) return false;
     const currentTotal = this.getTotalBet();
     return currentTotal + 5 <= this.balanceService.balance();
+  }
+
+  canAddChip(amount: number): boolean {
+    const currentTotal = this.getTotalBet();
+    return currentTotal + amount <= this.balanceService.balance();
   }
 
   canSelectChip(amount: number): boolean {
@@ -169,6 +220,21 @@ export class PlayComponent implements OnInit {
 
   getCardColor(card: Card): string {
     return this.cardService.getSuitColor(card.suit);
+  }
+
+  // Convert a bet amount into an array of chip denominations for display
+  getChipsForBet(bet: number): number[] {
+    const chips: number[] = [];
+    let remaining = bet;
+    const denominations = [100, 50, 25, 10, 5];
+
+    for (const denom of denominations) {
+      while (remaining >= denom) {
+        chips.push(denom);
+        remaining -= denom;
+      }
+    }
+    return chips;
   }
 
   getSuitSymbol(suit: string): string {

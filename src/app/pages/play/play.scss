@@ -549,7 +549,7 @@
   justify-content: center;
   align-items: flex-end;
   gap: 24px;
-  padding: 0 16px 16px;
+  padding: 0 16px 100px; // Extra padding at bottom for chip rack
   min-height: 260px;
 }
 
@@ -558,6 +558,7 @@
   flex-direction: column;
   align-items: center;
   transition: all 0.3s ease;
+  position: relative;
 
   &.box-left {
     transform: translateY(-20px);
@@ -572,6 +573,15 @@
   }
 
   &.active-box {
+    .player-box {
+      box-shadow: 
+        0 0 20px rgba(255, 193, 7, 0.4),
+        inset 0 0 20px rgba(0, 0, 0, 0.2);
+      border-color: #ffc107;
+    }
+  }
+
+  &.selected-box {
     .player-box {
       box-shadow: 
         0 0 20px rgba(255, 193, 7, 0.4),
@@ -601,16 +611,121 @@
   border: 3px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   padding: 12px;
-  min-width: 180px;
+  min-width: 200px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   transition: all 0.3s ease;
+  position: relative;
 
-  &.main-box {
-    min-width: 280px;
-    padding: 16px;
+  &.clickable {
+    cursor: pointer;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.35);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
   }
+}
+
+// Box bet content during betting phase
+.box-bet-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 80px;
+  justify-content: center;
+}
+
+.box-chips-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  max-width: 180px;
+  
+  .no-bet-text {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+}
+
+.display-chip {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.65rem;
+  position: relative;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+  }
+
+  &:hover {
+    transform: scale(1.15);
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.5),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3),
+      0 0 10px rgba(255, 0, 0, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .chip-value {
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
+
+  // Chip colors
+  &.chip-5 {
+    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+    border-color: #b71c1c;
+  }
+
+  &.chip-10 {
+    background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+    border-color: #0d47a1;
+  }
+
+  &.chip-25 {
+    background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+    border-color: #1b5e20;
+  }
+
+  &.chip-50 {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    border-color: #e65100;
+  }
+
+  &.chip-100 {
+    background: linear-gradient(135deg, #212121 0%, #000000 100%);
+    border-color: #424242;
+  }
+}
+
+.box-total-bet {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #ffc107;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .box-hands {
@@ -761,37 +876,122 @@
   }
 }
 
-// Bet Controls
-.box-bet-controls {
+// Remove Box Button (positioned inside box during betting)
+.remove-box-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 28px !important;
+  height: 28px !important;
+  z-index: 5;
+  
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Chip Rack Area - Positioned at the bottom of the table
+.chip-rack-area {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.chip-rack {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-
-  &.main-controls {
-    gap: 16px;
-  }
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.7) 100%);
+  padding: 12px 20px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.bet-chips-row {
+.chips-row {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-
+  gap: 10px;
+  
   .chip-btn {
-    width: 52px !important;
-    height: 52px !important;
-    font-size: 0.8rem !important;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 4px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
     font-weight: bold;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    position: relative;
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.4),
+      inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+    }
 
-    &.selected {
-      transform: scale(1.1);
-      box-shadow: 0 0 15px rgba(103, 58, 183, 0.6);
+    &:hover:not(:disabled) {
+      transform: translateY(-4px) scale(1.1);
+      box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0) scale(0.95);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .chip-value {
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    // Chip colors
+    &.chip-5 {
+      background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+      border-color: #b71c1c;
+    }
+
+    &.chip-10 {
+      background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+      border-color: #0d47a1;
+    }
+
+    &.chip-25 {
+      background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+      border-color: #1b5e20;
+    }
+
+    &.chip-50 {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      border-color: #e65100;
+    }
+
+    &.chip-100 {
+      background: linear-gradient(135deg, #212121 0%, #000000 100%);
+      border-color: #424242;
     }
   }
 }
 
+// Keep old bet-input-group for backwards compatibility if needed elsewhere
 .bet-input-group {
   display: flex;
   align-items: center;
@@ -936,8 +1136,8 @@
 
   .game-table {
     border-radius: 30% 30% 40% 40% / 15% 15% 25% 25%;
-    padding: 16px 16px 32px;
-    min-height: 450px;
+    padding: 16px 16px 100px; // Extra padding at bottom for chip rack
+    min-height: 500px;
   }
 
   .dealer-section {
@@ -947,6 +1147,7 @@
   .player-boxes-area {
     gap: 12px;
     flex-wrap: wrap;
+    padding-bottom: 80px; // Space for chip rack
   }
 
   .box-position {
@@ -956,11 +1157,8 @@
   }
 
   .player-box {
-    min-width: 150px;
-    
-    &.main-box {
-      min-width: 220px;
-    }
+    min-width: 160px;
+    padding: 10px;
   }
 
   .card {
@@ -991,11 +1189,19 @@
     }
   }
 
-  .bet-chips-row {
+  // Chip rack responsive
+  .chip-rack {
+    padding: 10px 14px;
+  }
+
+  .chips-row {
+    gap: 8px;
+
     .chip-btn {
-      width: 44px !important;
-      height: 44px !important;
-      font-size: 0.7rem !important;
+      width: 48px;
+      height: 48px;
+      font-size: 0.75rem;
+      border-width: 3px;
     }
   }
 
