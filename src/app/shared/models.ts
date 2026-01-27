@@ -75,7 +75,7 @@ export interface Box {
 // ============================================================================
 
 export type GamePhase = 'betting' | 'insurance' | 'playing' | 'dealer-turn' | 'resolved';
-export type GameResult = 'win' | 'lose' | 'push' | 'blackjack' | null;
+export type GameResult = HandResult | null;
 
 export interface ShoeState {
   totalCards: number;
@@ -159,36 +159,12 @@ export const createEmptyHand = (bet: number = 0): Hand => ({
 });
 
 export const createInitialBoxes = (): Box[] => [
+  createEmptyBox('left'),
   {
-    position: 'left',
-    hands: [],
-    activeHandIndex: 0,
-    bet: 0,
-    isActive: false,
-    isResolved: false,
-    insuranceBet: 0,
-    insuranceDeclined: false,
-  },
-  {
-    position: 'center',
-    hands: [],
-    activeHandIndex: 0,
-    bet: 0,
+    ...createEmptyBox('center'),
     isActive: true,
-    isResolved: false,
-    insuranceBet: 0,
-    insuranceDeclined: false,
   },
-  {
-    position: 'right',
-    hands: [],
-    activeHandIndex: 0,
-    bet: 0,
-    isActive: false,
-    isResolved: false,
-    insuranceBet: 0,
-    insuranceDeclined: false,
-  },
+  createEmptyBox('right'),
 ];
 
 export const createEmptyBox = (position: BoxPosition, bet: number = 0): Box => ({
