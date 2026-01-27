@@ -28,7 +28,15 @@ export function createDeck(): Card[] {
   const deck: Card[] = [];
   for (const suit of SUITS) {
     for (const rank of RANKS) {
-      deck.push({ id: generateCardId(), suit, rank, faceUp: true });
+      deck.push({
+        id: generateCardId(),
+        suit,
+        rank,
+        faceUp: true,
+        animationState: 'none',
+        animationDelay: 0,
+        isRevealed: true,
+      });
     }
   }
   return deck;
@@ -70,6 +78,7 @@ export function calculateHandValue(cards: Card[]): { value: number; isSoft: bool
   let aces = 0;
 
   for (const card of cards) {
+    // Count all face-up cards (isRevealed is for animation tracking, faceUp is the actual visibility)
     if (!card.faceUp) continue;
 
     if (card.rank === 'A') {

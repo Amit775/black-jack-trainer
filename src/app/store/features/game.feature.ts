@@ -19,7 +19,7 @@ import {
   createEmptyHand,
   createInitialBoxes,
 } from '../models';
-import { dealCardFromShoe } from './shoe.feature';
+import { dealCardFromShoe, dealFaceDownCard } from './shoe.feature';
 import {
   calculateHandValue,
   canSplit as canSplitCards,
@@ -27,6 +27,15 @@ import {
   isBlackjack,
   isBusted,
 } from '../utils/card.utils';
+import {
+  CARD_DEAL_DURATION,
+  CARD_FLIP_DURATION,
+  DEAL_STAGGER_DELAY,
+  DEALER_TURN_DELAY,
+  DEALER_HIT_DELAY,
+  HOLE_CARD_REVEAL_DELAY,
+  ANIMATION_BUFFER,
+} from '../../shared/animation.config';
 
 // ============================================================================
 // Initial State
@@ -43,15 +52,15 @@ const INITIAL_GAME_STATE: GameSliceState = {
 };
 
 // ============================================================================
-// Animation Constants (TODO: Move to animation service in Phase 2)
+// Animation Timing (derived from config)
 // ============================================================================
 
-const ANIMATION_DELAY_MS = 150;
+const ANIMATION_DELAY_MS = DEAL_STAGGER_DELAY;
 const SPLIT_DELAY_MS = 300;
-const DEAL_DELAY_MS = 500;
-const HOLE_CARD_REVEAL_MS = 600;
-const DEALER_CARD_ANIMATION_MS = 450;
-const DELAY_BETWEEN_DEALER_CARDS = 500;
+const DEAL_DELAY_MS = CARD_DEAL_DURATION + ANIMATION_BUFFER;
+const HOLE_CARD_REVEAL_MS = CARD_FLIP_DURATION + ANIMATION_BUFFER;
+const DEALER_CARD_ANIMATION_MS = CARD_DEAL_DURATION;
+const DELAY_BETWEEN_DEALER_CARDS = DEALER_HIT_DELAY;
 
 // ============================================================================
 // Game Feature
@@ -763,6 +772,85 @@ export function withGame() {
         getHandValue(hand: Hand): number {
           return calculateHandValue(hand.cards).value;
         },
+
+        /**
+         * Mark a card as revealed after its animation completes.
+         * This updates the card's isRevealed flag so its value is included in calculations.
+         */
+        markCardRevealed(cardId: string): void {
+          // Check dealer hand
+          const dealerHand = store.dealerHand();
+          const dealerCardIndex = dealerHand.cards.findIndex((c) => c.id === cardId);
+          
+          if (dealerCardIndex >= 0) {
+            const updatedCards = [...dealerHand.cards];
+            updatedCards[dealerCardIndex] = {
+              ...updatedCards[dealerCardIndex],
+              isRevealed: true,
+              animationState: 'dealt',
+            };
+            patchState(store, {
+              dealerHand: { ...dealerHand, cards: updatedCards },
+            });
+            return;
+          }
+
+          // Check player boxes
+          const boxes = store.boxes().map((box) => {
+            if (!box.isActive) return box;
+
+            const hands = box.hands.map((hand) => {
+              const cardIndex = hand.cards.findIndex((c) => c.id === cardId);
+              if (cardIndex >= 0) {
+                const updatedCards = [...hand.cards];
+                updatedCards[cardIndex] = {
+                  ...updatedCards[cardIndex],
+                  isRevealed: true,
+                  animationState: 'dealt',
+                };
+                return { ...hand, cards: updatedCards };
+              }
+              return hand;
+            });
+
+            return { ...box, hands };
+          });
+
+          patchState(store, { boxes });
+        },
+
+        /**
+         * Mark all currently dealing cards as revealed.
+         * Used when we need to skip animations or fast-forward.
+         */
+        revealAllCards(): void {
+          const dealerHand = store.dealerHand();
+          const updatedDealerCards = dealerHand.cards.map((c) => ({
+            ...c,
+            isRevealed: c.faceUp,
+            animationState: 'dealt' as const,
+          }));
+
+          const boxes = store.boxes().map((box) => {
+            if (!box.isActive) return box;
+
+            const hands = box.hands.map((hand) => ({
+              ...hand,
+              cards: hand.cards.map((c) => ({
+                ...c,
+                isRevealed: c.faceUp,
+                animationState: 'dealt' as const,
+              })),
+            }));
+
+            return { ...box, hands };
+          });
+
+          patchState(store, {
+            dealerHand: { ...dealerHand, cards: updatedDealerCards },
+            boxes,
+          });
+        },
       };
 
       // ========================================================================
@@ -772,8 +860,6 @@ export function withGame() {
       function dealInitialCards(): void {
         let shoe = [...store.shoe()];
         let shoeState = { ...store.shoeState() };
-        let cutCardHitDuringDeal = false;
-        let cardIndex = 0;
 
         if (shoe.length < 52) {
           shoe = createShoe(store.settings().numberOfDecks);
@@ -788,94 +874,135 @@ export function withGame() {
 
         shoeState = { ...shoeState, cutCardReached: false };
 
-        // Deal first card to each active box
-        const boxes = store.boxes().map((box) => {
+        // Prepare the active box positions for dealing
+        const activeBoxIndices = store.boxes()
+          .map((box, index) => ({ box, index }))
+          .filter(({ box }) => box.isActive)
+          .map(({ index }) => index);
+
+        // Initialize boxes with empty hands
+        let boxes = store.boxes().map((box) => {
           if (!box.isActive) return box;
-
-          const result = dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
-          cardIndex++;
-          shoe = result.shoe;
-          shoeState = result.shoeState;
-          if (result.cutCardHit) cutCardHitDuringDeal = true;
-
           const hand = createEmptyHand(box.bet);
-          hand.cards = [result.card];
           return { ...box, hands: [hand], activeHandIndex: 0, isResolved: false };
         });
 
-        // Deal first card to dealer
-        let dealerResult = dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
-        cardIndex++;
-        shoe = dealerResult.shoe;
-        shoeState = dealerResult.shoeState;
-        if (dealerResult.cutCardHit) cutCardHitDuringDeal = true;
-        const dealerCard1 = dealerResult.card;
+        // Initialize dealer hand
+        const dealerHand = createEmptyHand();
 
-        // Deal second card to each active box
-        const boxesWithSecondCard = boxes.map((box) => {
-          if (!box.isActive) return box;
-
-          const result = dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
-          cardIndex++;
-          shoe = result.shoe;
-          shoeState = result.shoeState;
-          if (result.cutCardHit) cutCardHitDuringDeal = true;
-
-          const hand = { ...box.hands[0] };
-          hand.cards = [...hand.cards, result.card];
-          return { ...box, hands: [hand] };
+        // Update state with initial setup
+        patchState(store, {
+          shoe,
+          shoeState,
+          boxes,
+          dealerHand,
+          phase: 'dealing' as GamePhase,
+          message: 'Dealing cards...',
         });
 
-        // Deal second card to dealer (face down)
-        dealerResult = dealCardFromShoe(shoe, shoeState, cardIndex * ANIMATION_DELAY_MS);
-        shoe = dealerResult.shoe;
-        shoeState = dealerResult.shoeState;
-        if (dealerResult.cutCardHit) cutCardHitDuringDeal = true;
-        const dealerCard2: Card = {
-          ...dealerResult.card,
-          faceUp: false,
-          animationState: 'dealing',
-          animationDelay: cardIndex * ANIMATION_DELAY_MS,
+        // Build the deal sequence: player1-card1, player2-card1, dealer-card1, player1-card2, player2-card2, dealer-card2
+        const dealSequence: Array<{ type: 'player'; boxIndex: number } | { type: 'dealer'; faceDown: boolean }> = [];
+        
+        // First round: one card to each player, then dealer
+        for (const boxIndex of activeBoxIndices) {
+          dealSequence.push({ type: 'player', boxIndex });
+        }
+        dealSequence.push({ type: 'dealer', faceDown: false });
+        
+        // Second round: one card to each player, then dealer (face down)
+        for (const boxIndex of activeBoxIndices) {
+          dealSequence.push({ type: 'player', boxIndex });
+        }
+        dealSequence.push({ type: 'dealer', faceDown: true });
+
+        // Deal cards one by one
+        let dealIndex = 0;
+        const dealDelay = CARD_DEAL_DURATION + ANIMATION_BUFFER;
+
+        const dealNextCard = () => {
+          if (dealIndex >= dealSequence.length) {
+            // All cards dealt, start playing
+            finishInitialDeal();
+            return;
+          }
+
+          const currentDeal = dealSequence[dealIndex];
+          let currentShoe = [...store.shoe()];
+          let currentShoeState = { ...store.shoeState() };
+
+          if (currentDeal.type === 'player') {
+            const result = dealCardFromShoe(currentShoe, currentShoeState, 0, dealIndex);
+            const card = { ...result.card, isRevealed: true };
+            
+            const updatedBoxes = store.boxes().map((box, idx) => {
+              if (idx !== currentDeal.boxIndex) return box;
+              const hand = { ...box.hands[0] };
+              hand.cards = [...hand.cards, card];
+              return { ...box, hands: [hand] };
+            });
+
+            patchState(store, {
+              shoe: result.shoe,
+              shoeState: result.shoeState,
+              boxes: updatedBoxes,
+            });
+          } else {
+            // Dealer card
+            const result = currentDeal.faceDown
+              ? dealFaceDownCard(currentShoe, currentShoeState, 0, dealIndex)
+              : dealCardFromShoe(currentShoe, currentShoeState, 0, dealIndex);
+            
+            const card = { ...result.card, isRevealed: !currentDeal.faceDown };
+            const currentDealerHand = store.dealerHand();
+            
+            patchState(store, {
+              shoe: result.shoe,
+              shoeState: result.shoeState,
+              dealerHand: {
+                ...currentDealerHand,
+                cards: [...currentDealerHand.cards, card],
+              },
+            });
+          }
+
+          dealIndex++;
+          setTimeout(dealNextCard, dealDelay);
         };
 
-        const dealerHand = createEmptyHand();
-        dealerHand.cards = [dealerCard1, dealerCard2];
+        // Start dealing after a short delay
+        setTimeout(dealNextCard, 100);
+      }
 
-        shoeState = { ...shoeState, cutCardReached: cutCardHitDuringDeal };
-
-        const firstActiveIndex = boxesWithSecondCard.findIndex((b) => b.isActive);
-        const dealerShowsAce = dealerCard1.rank === 'A';
+      function finishInitialDeal(): void {
+        const boxes = store.boxes();
+        const dealerHand = store.dealerHand();
+        const firstActiveIndex = boxes.findIndex((b) => b.isActive);
+        const dealerCard1 = dealerHand.cards[0];
+        const dealerShowsAce = dealerCard1?.rank === 'A';
         const insuranceAllowed = store.settings().insuranceAllowed;
-        const anyBoxCanAffordInsurance = boxesWithSecondCard.some(
+        const anyBoxCanAffordInsurance = boxes.some(
           (box) => box.isActive && store.balance() >= box.bet / 2,
         );
 
         if (dealerShowsAce && insuranceAllowed && anyBoxCanAffordInsurance) {
-          const firstInsuranceBoxIndex = boxesWithSecondCard.findIndex((b) => b.isActive);
-          const firstBox = boxesWithSecondCard[firstInsuranceBoxIndex];
+          const firstInsuranceBoxIndex = boxes.findIndex((b) => b.isActive);
+          const firstBox = boxes[firstInsuranceBoxIndex];
 
           patchState(store, {
-            shoe,
-            shoeState,
-            boxes: boxesWithSecondCard,
             activeBoxIndex: firstActiveIndex,
             insuranceBoxIndex: firstInsuranceBoxIndex,
-            dealerHand,
             phase: 'insurance',
             message: `Insurance for ${firstBox.position} box? (Cost: $${(firstBox.bet / 2).toFixed(2)})`,
           });
         } else {
           patchState(store, {
-            shoe,
-            shoeState,
-            boxes: boxesWithSecondCard,
             activeBoxIndex: firstActiveIndex,
             insuranceBoxIndex: -1,
-            dealerHand,
             phase: 'playing',
             message: 'Your turn',
           });
 
+          // Check for immediate blackjacks
           checkInitialBlackjacks();
         }
       }

@@ -1,4 +1,11 @@
-<div class="player-box" (click)="onBoxClick()" [class.clickable]="isBetting()">
+<div
+  class="player-box"
+  (click)="onBoxClick()"
+  [class.clickable]="isBetting()"
+  [class.selected]="isSelectedBox()"
+  [class.active]="isActiveBox()"
+  [class.insurance]="isInsuranceBox()"
+>
   @if (isBetting()) {
     <!-- Betting phase: show chips and total -->
     <div class="box-bet-content">
@@ -31,47 +38,51 @@
           [class.result-win]="hand.result === 'win' || hand.result === 'blackjack'"
           [class.result-lose]="hand.result === 'lose'"
           [class.result-push]="hand.result === 'push'"
+          [class.busted]="isBustedHand(hand)"
         >
+          <!-- Hand Info Header -->
           <div class="hand-info">
             @if (hand.cards.length > 0) {
-              <span class="hand-value-badge">{{ getHandValue(hand) }}</span>
+              <div
+                class="hand-value-badge"
+                [class.blackjack]="isBlackjack(hand)"
+                [class.busted]="isBustedHand(hand)"
+              >
+                @if (isBlackjack(hand)) {
+                  <span class="bj-text">BJ!</span>
+                } @else if (isBustedHand(hand)) {
+                  <span class="bust-text">BUST</span>
+                } @else {
+                  <span>{{ getHandValue(hand) }}</span>
+                }
+              </div>
             }
             @if (hand.isSplit) {
               <span class="split-badge">Split {{ handIdx + 1 }}</span>
             }
-          </div>
-          <div class="cards-row">
-            @for (card of hand.cards; track card.id) {
-              <div
-                class="card"
-                [class.red]="isRed(card)"
-                [class.card-dealing]="card.animationState === 'dealing'"
-                [class.card-revealing]="card.animationState === 'revealing'"
-                [class.card-split-left]="card.animationState === 'split-left'"
-                [class.card-split-right]="card.animationState === 'split-right'"
-                [style.animation-delay.ms]="card.animationDelay || 0"
-              >
-                @if (card.animationState === 'revealing') {
-                  <div class="card-flip-container">
-                    <div class="card-flip-back"></div>
-                    <div class="card-flip-front" [class.red]="isRed(card)">
-                      <span class="card-rank">{{ card.rank }}</span>
-                      <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
-                    </div>
-                  </div>
-                } @else if (card.faceUp) {
-                  <div class="card-content">
-                    <span class="card-rank">{{ card.rank }}</span>
-                    <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
-                  </div>
-                } @else {
-                  <div class="card-back"></div>
-                }
-              </div>
+            @if (hand.isDoubledDown) {
+              <span class="double-badge">2x</span>
             }
           </div>
+
+          <!-- Cards Row with Animated Cards -->
+          <div class="cards-row" [class.many-cards]="hand.cards.length > 4">
+            @for (card of hand.cards; track card.id; let cardIdx = $index) {
+              <app-playing-card
+                [card]="card"
+                [size]="'small'"
+                (enterComplete)="onCardEnterComplete($event)"
+                (revealComplete)="onCardRevealComplete($event)"
+                [class.new-card]="cardIdx === hand.cards.length - 1 && isActiveHand(handIdx)"
+              />
+            }
+          </div>
+
+          <!-- Bet Display -->
           <div class="bet-display">
-            <span class="bet-chip">${{ hand.bet }}</span>
+            <span class="bet-chip" [class.doubled]="hand.isDoubledDown">
+              ${{ hand.bet }}
+            </span>
             @if (hand.result) {
               <span class="result-badge" [class]="hand.result">
                 {{ getResultText(hand.result) }}
@@ -82,6 +93,7 @@
       }
     </div>
   }
+
   @if (isBetting() && !isCenter()) {
     <button
       mat-mini-fab

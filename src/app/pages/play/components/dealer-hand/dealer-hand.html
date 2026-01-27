@@ -1,38 +1,30 @@
 <div class="dealer-section">
   <div class="dealer-area">
     <div class="hand-label">
-      <span>Dealer</span>
+      <span class="dealer-label">Dealer</span>
       @if (shouldShowValue()) {
-        <span class="hand-value">{{ handValue() }}</span>
+        <div class="hand-value-container" [class.blackjack]="hasBlackjack()">
+          @if (hasBlackjack()) {
+            <span class="blackjack-badge">BLACKJACK!</span>
+          } @else {
+            <span class="hand-value">{{ displayValue() }}</span>
+          }
+        </div>
       }
     </div>
     <div class="cards-row dealer-cards">
-      @for (card of hand().cards; track card.id) {
-        <div
-          class="card"
-          [class.face-down]="!card.faceUp"
-          [class.red]="isRed(card)"
-          [class.card-dealing]="card.animationState === 'dealing'"
-          [class.card-revealing]="card.animationState === 'revealing'"
-          [style.animation-delay.ms]="card.animationDelay || 0"
-        >
-          @if (card.animationState === 'revealing') {
-            <!-- During flip animation, show both faces -->
-            <div class="card-flip-container">
-              <div class="card-flip-back"></div>
-              <div class="card-flip-front" [class.red]="isRed(card)">
-                <span class="card-rank">{{ card.rank }}</span>
-                <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
-              </div>
-            </div>
-          } @else if (card.faceUp) {
-            <div class="card-content">
-              <span class="card-rank">{{ card.rank }}</span>
-              <span class="card-suit">{{ getSuitSymbol(card.suit) }}</span>
-            </div>
-          } @else {
-            <div class="card-back"></div>
-          }
+      @for (card of hand().cards; track card.id; let i = $index) {
+        <app-playing-card
+          [card]="card"
+          [size]="'large'"
+          (enterComplete)="onCardEnterComplete($event)"
+          (revealComplete)="onCardRevealComplete($event)"
+          [class.hole-card]="i === 1 && !card.faceUp"
+        />
+      }
+      @empty {
+        <div class="empty-hand-placeholder">
+          <span class="placeholder-text">Waiting for deal...</span>
         </div>
       }
     </div>

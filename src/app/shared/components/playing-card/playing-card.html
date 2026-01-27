@@ -1,0 +1,53 @@
+<div class="playing-card" [ngClass]="cardClasses()">
+  @if (card().faceUp || isRevealing()) {
+    <!-- Card Face -->
+    <div class="card-face">
+      <div class="card-corner top-left">
+        <span class="card-rank">{{ card().rank }}</span>
+        <span class="card-suit">{{ suitSymbol() }}</span>
+      </div>
+      
+      <div class="card-center">
+        <span class="card-suit-large">{{ suitSymbol() }}</span>
+      </div>
+      
+      <div class="card-corner bottom-right">
+        <span class="card-rank">{{ card().rank }}</span>
+        <span class="card-suit">{{ suitSymbol() }}</span>
+      </div>
+    </div>
+  } @else {
+    <!-- Card Back -->
+    <div class="card-back">
+      <div class="card-back-pattern">
+        <div class="pattern-inner"></div>
+      </div>
+    </div>
+  }
+  
+  @if (isRevealing()) {
+    <!-- Flip Animation Overlay -->
+    <div class="flip-overlay">
+      <div class="flip-card-inner">
+        <div class="flip-card-back">
+          <div class="card-back-pattern">
+            <div class="pattern-inner"></div>
+          </div>
+        </div>
+        <div class="flip-card-front" [class.red]="isRed()">
+          <div class="card-corner top-left">
+            <span class="card-rank">{{ card().rank }}</span>
+            <span class="card-suit">{{ suitSymbol() }}</span>
+          </div>
+          <div class="card-center">
+            <span class="card-suit-large">{{ suitSymbol() }}</span>
+          </div>
+          <div class="card-corner bottom-right">
+            <span class="card-rank">{{ card().rank }}</span>
+            <span class="card-suit">{{ suitSymbol() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

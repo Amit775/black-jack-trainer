@@ -1,4 +1,12 @@
-import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  input,
+  output,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +22,9 @@ import {
   SUIT_SYMBOLS,
   RESULT_TEXT,
 } from '../../../../shared/models';
+import { PlayingCardComponent } from '../../../../shared/components';
+import { AnimationCoordinatorService } from '../../../../services/animation-coordinator.service';
+import { calculateHandValue } from '../../../../store/utils/card.utils';
 
 export interface PlayerBoxEvent {
   position: BoxPosition;
@@ -24,15 +35,29 @@ export interface ChipRemoveEvent {
   chipValue: number;
 }
 
+/**
+ * PlayerBoxComponent
+ *
+ * Displays a player's betting box with animated cards.
+ * Hand values are calculated only after cards are revealed (animation complete).
+ */
 @Component({
   selector: 'app-player-box',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    PlayingCardComponent,
+  ],
   templateUrl: './player-box.html',
   styleUrl: './player-box.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerBoxComponent {
+  private readonly animationCoordinator = inject(AnimationCoordinatorService);
+
   /** The box data to display */
   readonly box = input.required<Box>();
 
@@ -60,11 +85,18 @@ export class PlayerBoxComponent {
   /** Emitted when user clicks remove box button */
   readonly boxRemoved = output<PlayerBoxEvent>();
 
+  /** Emitted when a card animation completes */
+  readonly cardAnimationComplete = output<string>();
+
+  // Track revealed cards for each hand
+  private readonly revealedCards = signal<Set<string>>(new Set());
+
   protected readonly position = computed(() => this.box().position);
   protected readonly bet = computed(() => this.box().bet);
   protected readonly hands = computed(() => this.box().hands);
   protected readonly isBetting = computed(() => this.gamePhase() === 'betting');
   protected readonly isCenter = computed(() => this.position() === 'center');
+  protected readonly isPlaying = computed(() => this.gamePhase() === 'playing');
 
   protected readonly chipsForBet = computed(() => {
     const chips: number[] = [];
@@ -96,29 +128,34 @@ export class PlayerBoxComponent {
     return this.isActiveBox() && this.activeHandIndex() === handIndex;
   }
 
+  /**
+   * Get the hand value, only counting revealed cards
+   */
   protected getHandValue(hand: Hand): number {
-    let value = 0;
-    let aces = 0;
+    return calculateHandValue(hand.cards).value;
+  }
 
-    for (const card of hand.cards) {
-      if (!card.faceUp) continue;
+  /**
+   * Check if hand has a blackjack
+   */
+  protected isBlackjack(hand: Hand): boolean {
+    const value = calculateHandValue(hand.cards);
+    return value.value === 21 && hand.cards.length === 2 && !hand.isSplit;
+  }
 
-      if (card.rank === 'A') {
-        aces++;
-        value += 11;
-      } else if (['J', 'Q', 'K'].includes(card.rank)) {
-        value += 10;
-      } else {
-        value += parseInt(card.rank, 10);
-      }
-    }
+  /**
+   * Check if hand is busted
+   */
+  protected isBustedHand(hand: Hand): boolean {
+    return calculateHandValue(hand.cards).value > 21;
+  }
 
-    while (value > 21 && aces > 0) {
-      value -= 10;
-      aces--;
-    }
-
-    return value;
+  /**
+   * Get classes for result display
+   */
+  protected getResultClass(result: HandResult | undefined): string {
+    if (!result) return '';
+    return `result-${result}`;
   }
 
   protected onBoxClick(): void {
@@ -135,5 +172,28 @@ export class PlayerBoxComponent {
   protected onRemoveBox(event: Event): void {
     event.stopPropagation();
     this.boxRemoved.emit({ position: this.position() });
+  }
+
+  protected onCardEnterComplete(cardId: string): void {
+    this.revealedCards.update((cards) => {
+      const newCards = new Set(cards);
+      newCards.add(cardId);
+      return newCards;
+    });
+    this.animationCoordinator.completeAnimation(cardId, 'card-dealt');
+    this.cardAnimationComplete.emit(cardId);
+  }
+
+  protected onCardRevealComplete(cardId: string): void {
+    this.animationCoordinator.completeAnimation(cardId, 'card-revealed');
+    this.cardAnimationComplete.emit(cardId);
+  }
+
+  protected trackByCardId(index: number, card: Card): string {
+    return card.id;
+  }
+
+  protected trackByHandIndex(index: number, hand: Hand): number {
+    return index;
   }
 }

@@ -23,20 +23,27 @@ export type ChipDenomination = (typeof CHIP_DENOMINATIONS)[number];
 
 export type CardAnimationState =
   | 'none'
-  | 'dealing'
-  | 'revealing'
-  | 'dealt'
-  | 'split-left'
-  | 'split-right';
+  | 'entering'    // Card is animating in from the shoe
+  | 'dealt'       // Card has finished entering and is in place
+  | 'revealing'   // Face-down card is flipping to show face
+  | 'revealed'    // Card has finished revealing
+  | 'split-left'  // Card is animating to left split position
+  | 'split-right' // Card is animating to right split position
+  | 'exiting';    // Card is leaving (end of hand)
 
 export interface Card {
   id: string;
   suit: Suit;
   rank: Rank;
   faceUp: boolean;
-  animationState?: CardAnimationState;
-  animationDelay?: number;
-  isRevealed?: boolean;
+  /** Current animation state */
+  animationState: CardAnimationState;
+  /** Delay before animation starts (ms) */
+  animationDelay: number;
+  /** Whether the card's value should be included in hand calculation */
+  isRevealed: boolean;
+  /** Stagger index for enter animation timing */
+  dealIndex?: number;
 }
 
 // ============================================================================
@@ -74,7 +81,7 @@ export interface Box {
 // Game State Types
 // ============================================================================
 
-export type GamePhase = 'betting' | 'insurance' | 'playing' | 'dealer-turn' | 'resolved';
+export type GamePhase = 'betting' | 'dealing' | 'insurance' | 'playing' | 'dealer-turn' | 'resolved';
 export type GameResult = HandResult | null;
 
 export interface ShoeState {

@@ -30,18 +30,60 @@ export function dealCardFromShoe(
   shoe: Card[],
   shoeState: ShoeState,
   animationDelay: number = 0,
+  dealIndex: number = 0,
 ): DealCardResult {
   const updatedShoe = [...shoe];
+  const baseCard = updatedShoe.pop()!;
+  
+  // Create card with proper animation state
+  // isRevealed starts as false - will be set to true when animation completes
   const card: Card = {
-    ...updatedShoe.pop()!,
+    ...baseCard,
     faceUp: true,
-    animationState: 'dealing',
+    animationState: 'entering',
     animationDelay,
+    isRevealed: false, // Will be true after enter animation completes
+    dealIndex,
   };
 
   const newCardsDealt = shoeState.cardsDealt + 1;
   const remainingCards = shoeState.totalCards - newCardsDealt;
 
+  const cutCardHit = remainingCards <= shoeState.cutCardPosition && !shoeState.cutCardReached;
+
+  const updatedShoeState: ShoeState = {
+    ...shoeState,
+    cardsDealt: newCardsDealt,
+    cutCardReached: shoeState.cutCardReached || cutCardHit,
+    shuffleNeeded: shoeState.shuffleNeeded || cutCardHit,
+  };
+
+  return { card, shoe: updatedShoe, shoeState: updatedShoeState, cutCardHit };
+}
+
+/**
+ * Create a face-down card (e.g., dealer's hole card)
+ */
+export function dealFaceDownCard(
+  shoe: Card[],
+  shoeState: ShoeState,
+  animationDelay: number = 0,
+  dealIndex: number = 0,
+): DealCardResult {
+  const updatedShoe = [...shoe];
+  const baseCard = updatedShoe.pop()!;
+  
+  const card: Card = {
+    ...baseCard,
+    faceUp: false,
+    animationState: 'entering',
+    animationDelay,
+    isRevealed: false,
+    dealIndex,
+  };
+
+  const newCardsDealt = shoeState.cardsDealt + 1;
+  const remainingCards = shoeState.totalCards - newCardsDealt;
   const cutCardHit = remainingCards <= shoeState.cutCardPosition && !shoeState.cutCardReached;
 
   const updatedShoeState: ShoeState = {

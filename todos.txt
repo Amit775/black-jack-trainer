@@ -1,11 +1,13 @@
 # Black Jack Trainer - Future Tasks
 
-## Phase 2: Animation Management
-- [ ] Extract animation timing constants to a central config
-- [ ] Create AnimationCoordinatorService or utility
-- [ ] Remove setTimeout calls from store methods
-- [ ] Implement animation-aware state transitions
-- [ ] Consider using Angular Animations or RxJS timers for better control
+## Phase 2: Animation Management ✅ COMPLETED
+- [x] Extract animation timing constants to a central config (animation.config.ts)
+- [x] Create AnimationCoordinatorService with RxJS observables
+- [x] Remove setTimeout calls from store methods  
+- [x] Implement animation-aware state transitions with CardAnimationState
+- [x] Created PlayingCardComponent with animate.enter from Angular's new API
+- [x] Cards animate from left (shoe position) with staggered delays
+- [x] Hand value calculation delayed until card is revealed
 
 ## Phase 3: Unit Testing
 - [ ] Add unit tests for card.utils.ts (pure functions - easy to test)
