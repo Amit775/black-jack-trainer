@@ -21,8 +21,7 @@
           (revealComplete)="onCardRevealComplete($event)"
           [class.hole-card]="i === 1 && !card.faceUp"
         />
-      }
-      @empty {
+      } @empty {
         <div class="empty-hand-placeholder">
           <span class="placeholder-text">Waiting for deal...</span>
         </div>

@@ -44,13 +44,7 @@ export interface ChipRemoveEvent {
 @Component({
   selector: 'app-player-box',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    PlayingCardComponent,
-  ],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule, PlayingCardComponent],
   templateUrl: './player-box.html',
   styleUrl: './player-box.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

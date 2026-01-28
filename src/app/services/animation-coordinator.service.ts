@@ -28,10 +28,10 @@ export interface CardAnimationRequest {
 
 /**
  * AnimationCoordinatorService
- * 
+ *
  * Manages animation timing and coordination across the game.
  * Provides reactive animation events and timing utilities.
- * 
+ *
  * Key responsibilities:
  * - Track current animation phase
  * - Queue and coordinate card animations
@@ -46,21 +46,21 @@ export class AnimationCoordinatorService {
   private readonly _phase = signal<AnimationPhase>('idle');
   private readonly _isAnimating = signal(false);
   private readonly _pendingAnimations = signal<Set<string>>(new Set());
-  
+
   // Public signals
   readonly phase = this._phase.asReadonly();
   readonly isAnimating = this._isAnimating.asReadonly();
-  
+
   // Animation event streams
   private readonly _animationComplete$ = new Subject<AnimationEvent>();
   private readonly _cardDealt$ = new Subject<string>();
   private readonly _cardRevealed$ = new Subject<string>();
-  
+
   // Public observables
   readonly animationComplete$: Observable<AnimationEvent> = this._animationComplete$.asObservable();
   readonly cardDealt$: Observable<string> = this._cardDealt$.asObservable();
   readonly cardRevealed$: Observable<string> = this._cardRevealed$.asObservable();
-  
+
   // Track pending animations for coordination
   readonly hasPendingAnimations = computed(() => this._pendingAnimations().size > 0);
 
@@ -183,7 +183,7 @@ export class AnimationCoordinatorService {
    */
   async waitForAllAnimations(): Promise<void> {
     if (this._pendingAnimations().size === 0) return;
-    
+
     // Wait until pending animations are cleared
     return new Promise((resolve) => {
       const checkComplete = () => {

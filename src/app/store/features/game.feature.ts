@@ -781,7 +781,7 @@ export function withGame() {
           // Check dealer hand
           const dealerHand = store.dealerHand();
           const dealerCardIndex = dealerHand.cards.findIndex((c) => c.id === cardId);
-          
+
           if (dealerCardIndex >= 0) {
             const updatedCards = [...dealerHand.cards];
             updatedCards[dealerCardIndex] = {
@@ -875,7 +875,8 @@ export function withGame() {
         shoeState = { ...shoeState, cutCardReached: false };
 
         // Prepare the active box positions for dealing
-        const activeBoxIndices = store.boxes()
+        const activeBoxIndices = store
+          .boxes()
           .map((box, index) => ({ box, index }))
           .filter(({ box }) => box.isActive)
           .map(({ index }) => index);
@@ -901,14 +902,16 @@ export function withGame() {
         });
 
         // Build the deal sequence: player1-card1, player2-card1, dealer-card1, player1-card2, player2-card2, dealer-card2
-        const dealSequence: Array<{ type: 'player'; boxIndex: number } | { type: 'dealer'; faceDown: boolean }> = [];
-        
+        const dealSequence: Array<
+          { type: 'player'; boxIndex: number } | { type: 'dealer'; faceDown: boolean }
+        > = [];
+
         // First round: one card to each player, then dealer
         for (const boxIndex of activeBoxIndices) {
           dealSequence.push({ type: 'player', boxIndex });
         }
         dealSequence.push({ type: 'dealer', faceDown: false });
-        
+
         // Second round: one card to each player, then dealer (face down)
         for (const boxIndex of activeBoxIndices) {
           dealSequence.push({ type: 'player', boxIndex });
@@ -933,7 +936,7 @@ export function withGame() {
           if (currentDeal.type === 'player') {
             const result = dealCardFromShoe(currentShoe, currentShoeState, 0, dealIndex);
             const card = { ...result.card, isRevealed: true };
-            
+
             const updatedBoxes = store.boxes().map((box, idx) => {
               if (idx !== currentDeal.boxIndex) return box;
               const hand = { ...box.hands[0] };
@@ -951,10 +954,10 @@ export function withGame() {
             const result = currentDeal.faceDown
               ? dealFaceDownCard(currentShoe, currentShoeState, 0, dealIndex)
               : dealCardFromShoe(currentShoe, currentShoeState, 0, dealIndex);
-            
+
             const card = { ...result.card, isRevealed: !currentDeal.faceDown };
             const currentDealerHand = store.dealerHand();
-            
+
             patchState(store, {
               shoe: result.shoe,
               shoeState: result.shoeState,

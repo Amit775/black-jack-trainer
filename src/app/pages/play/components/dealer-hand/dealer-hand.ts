@@ -49,7 +49,7 @@ export class DealerHandComponent {
     const cards = this.hand().cards;
     if (cards.length === 0) return false;
     // Only show value if at least one card is revealed
-    return cards.some(c => c.isRevealed);
+    return cards.some((c) => c.isRevealed);
   });
 
   /** Display value with animation consideration */
@@ -61,7 +61,7 @@ export class DealerHandComponent {
   protected readonly hasBlackjack = computed(() => {
     const value = this.handValue();
     const cards = this.hand().cards;
-    return value === 21 && cards.length === 2 && cards.every(c => c.isRevealed);
+    return value === 21 && cards.length === 2 && cards.every((c) => c.isRevealed);
   });
 
   protected getSuitSymbol(suit: Suit): string {
@@ -78,7 +78,7 @@ export class DealerHandComponent {
   }
 
   protected onCardRevealComplete(cardId: string): void {
-    this.revealedCardIds.update(ids => {
+    this.revealedCardIds.update((ids) => {
       const newIds = new Set(ids);
       newIds.add(cardId);
       return newIds;

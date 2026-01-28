@@ -64,7 +64,7 @@ export const EASE_SPRING = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)';
 // Animation State Types
 // ============================================================================
 
-export type AnimationPhase = 
+export type AnimationPhase =
   | 'idle'
   | 'dealing-initial'
   | 'dealing-player'

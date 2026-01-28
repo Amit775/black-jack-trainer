@@ -32,7 +32,7 @@ import { Card, SUIT_SYMBOLS } from '../../models';
   styleUrl: './playing-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    'class': 'playing-card-host',
+    class: 'playing-card-host',
     '[class.is-red]': 'isRed()',
     '[class.is-face-down]': '!card().faceUp',
     '[class.is-revealing]': 'isRevealing()',
@@ -97,7 +97,7 @@ export class PlayingCardComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     const element = this.el.nativeElement as HTMLElement;
-    
+
     // Listen for animation end to emit completion events
     this.animationEndHandler = (event: AnimationEvent) => {
       if (event.animationName === 'cardSlideIn' && !this.hasEmittedEnter) {
@@ -109,7 +109,7 @@ export class PlayingCardComponent implements AfterViewInit, OnDestroy {
         this.revealComplete.emit(this.card().id);
       }
     };
-    
+
     element.addEventListener('animationend', this.animationEndHandler as EventListener);
   }
 

@@ -80,9 +80,7 @@
 
           <!-- Bet Display -->
           <div class="bet-display">
-            <span class="bet-chip" [class.doubled]="hand.isDoubledDown">
-              ${{ hand.bet }}
-            </span>
+            <span class="bet-chip" [class.doubled]="hand.isDoubledDown"> ${{ hand.bet }} </span>
             @if (hand.result) {
               <span class="result-badge" [class]="hand.result">
                 {{ getResultText(hand.result) }}

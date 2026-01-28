@@ -34,7 +34,7 @@ export function dealCardFromShoe(
 ): DealCardResult {
   const updatedShoe = [...shoe];
   const baseCard = updatedShoe.pop()!;
-  
+
   // Create card with proper animation state
   // isRevealed starts as false - will be set to true when animation completes
   const card: Card = {
@@ -72,7 +72,7 @@ export function dealFaceDownCard(
 ): DealCardResult {
   const updatedShoe = [...shoe];
   const baseCard = updatedShoe.pop()!;
-  
+
   const card: Card = {
     ...baseCard,
     faceUp: false,
