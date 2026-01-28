@@ -41,6 +41,22 @@
 - [x] Remove deprecated services after migration (BalanceService, GameSettingsService, GameService, CardService)
 - [x] Consolidate types in shared/models.ts as single source of truth
 - [x] Use constants (SUITS, RANKS) to derive types
-- [ ] Clean up unused imports across components
+- [x] Clean up unused imports across components
+  - Removed unused RxJS operators (take, map) from animation-coordinator.service.ts
+  - Removed unused AnimationCoordinatorService import/injection from play.ts
+  - Removed unused effect import from dealer-hand.ts
+  - Removed unused DEALER_TURN_DELAY, HOLE_CARD_REVEAL_DELAY, DEAL_STAGGER_DELAY from game.feature.ts
+  - Removed unused ANIMATION_DELAY_MS constant from game.feature.ts
 - [ ] Add JSDoc comments to store methods
-- [ ] Review and optimize computed signal dependencies
+- [x] Review and optimize computed signal dependencies
+  - Removed 11 redundant wrapper computed signals in play.ts (balance, phase, boxes, etc.)
+  - Now using store signals directly in templates: store.balance(), store.phase(), etc.
+  - Removed unused displayValue computed from dealer-hand.ts
+  - Removed unused revealedCardIds signal from dealer-hand.ts
+  - Reduces memory overhead and improves change detection performance
+
+## Modern Angular Best Practices (Completed)
+- [x] Migrated from FormsModule/ngModel to Signal Forms (@angular/forms/signals)
+  - home.ts: Uses signal() + form() + [formField] for deposit/withdraw forms
+  - settings-dialog.ts: Uses signal() + form() + [formField] for settings form
+  - Removed FormsModule dependency from both components

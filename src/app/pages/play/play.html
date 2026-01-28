@@ -1,19 +1,19 @@
 <div class="play-container">
   <!-- Game Header -->
-  <app-game-header [balance]="balance()" (settingsClicked)="openSettings()" />
+  <app-game-header [balance]="store.balance()" (settingsClicked)="openSettings()" />
 
   <div class="game-table">
     <!-- Table Accessories (Shoe & Discard Tray) -->
     <app-table-accessories
-      [shoeState]="shoeState()"
-      [cardsInShoe]="cardsInShoe()"
-      [discardTray]="discardTray()"
+      [shoeState]="store.shoeState()"
+      [cardsInShoe]="store.shoe().length"
+      [discardTray]="store.discardTray()"
     />
 
     <!-- Dealer Section -->
     <app-dealer-hand
-      [hand]="dealerHand()"
-      [handValue]="dealerHandValue()"
+      [hand]="store.dealerHand()"
+      [handValue]="store.dealerHandValue()"
       (cardEntered)="onCardAnimationComplete($event)"
       (cardRevealed)="onCardAnimationComplete($event)"
     />
@@ -21,11 +21,11 @@
     <!-- Game Message -->
     <div class="game-message">
       <span
-        [class.win]="result() === 'win' || result() === 'blackjack'"
-        [class.lose]="result() === 'lose'"
-        [class.push]="result() === 'push'"
+        [class.win]="store.result() === 'win' || store.result() === 'blackjack'"
+        [class.lose]="store.result() === 'lose'"
+        [class.push]="store.result() === 'push'"
       >
-        {{ message() }}
+        {{ store.message() }}
       </span>
     </div>
 
@@ -45,7 +45,7 @@
             @if (box.isActive) {
               <app-player-box
                 [box]="box"
-                [gamePhase]="phase()"
+                [gamePhase]="store.phase()"
                 [isActiveBox]="isActiveBox(position)"
                 [isInsuranceBox]="isInsuranceBox(position)"
                 [isSelectedBox]="isSelectedBox(position)"
@@ -55,7 +55,7 @@
                 (boxRemoved)="onBoxRemoved($event)"
                 (cardAnimationComplete)="onCardAnimationComplete($event)"
               />
-            } @else if (phase() === 'betting') {
+            } @else if (store.phase() === 'betting') {
               <button
                 class="add-box-btn"
                 mat-fab
@@ -71,10 +71,10 @@
     </div>
 
     <!-- Chip Rack -->
-    @if (phase() === 'betting') {
+    @if (store.phase() === 'betting') {
       <app-chip-rack
-        [balance]="balance()"
-        [currentTotalBet]="totalBet()"
+        [balance]="store.balance()"
+        [currentTotalBet]="store.currentBet()"
         (chipSelected)="onChipSelected($event)"
       />
     }
@@ -82,10 +82,10 @@
 
   <!-- Game Controls -->
   <app-game-controls
-    [phase]="phase()"
-    [totalBet]="totalBet()"
+    [phase]="store.phase()"
+    [totalBet]="store.currentBet()"
     [controlsState]="controlsState()"
-    [insuranceBox]="insuranceBox()"
+    [insuranceBox]="store.insuranceBox()"
     (actionTriggered)="onActionTriggered($event)"
   />
 </div>

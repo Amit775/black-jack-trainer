@@ -48,20 +48,7 @@ export class PlayComponent implements OnInit {
 
   protected readonly boxPositions: BoxPosition[] = ['left', 'center', 'right'];
 
-  // Computed signals for template
-  protected readonly balance = computed(() => this.store.balance());
-  protected readonly phase = computed(() => this.store.phase());
-  protected readonly boxes = computed(() => this.store.boxes());
-  protected readonly dealerHand = computed(() => this.store.dealerHand());
-  protected readonly dealerHandValue = computed(() => this.store.dealerHandValue());
-  protected readonly shoeState = computed(() => this.store.shoeState());
-  protected readonly cardsInShoe = computed(() => this.store.shoe().length);
-  protected readonly discardTray = computed(() => this.store.discardTray());
-  protected readonly totalBet = computed(() => this.store.currentBet());
-  protected readonly insuranceBox = computed(() => this.store.insuranceBox());
-  protected readonly message = computed(() => this.store.message());
-  protected readonly result = computed(() => this.store.result());
-
+  // Only keep computed signals that add value or combine multiple sources
   protected readonly controlsState = computed<GameControlsState>(() => ({
     canHit: this.store.canHit() ?? false,
     canStand: this.store.canStand() ?? false,
@@ -78,21 +65,21 @@ export class PlayComponent implements OnInit {
 
   // Box helpers
   protected getBox(position: BoxPosition) {
-    return this.boxes().find((b) => b.position === position);
+    return this.store.boxes().find((b) => b.position === position);
   }
 
   protected isActiveBox(position: BoxPosition): boolean {
     const activeBox = this.store.activeBox();
-    return activeBox?.position === position && this.phase() === 'playing';
+    return activeBox?.position === position && this.store.phase() === 'playing';
   }
 
   protected isInsuranceBox(position: BoxPosition): boolean {
     const insuranceBox = this.store.insuranceBox();
-    return insuranceBox?.position === position && this.phase() === 'insurance';
+    return insuranceBox?.position === position && this.store.phase() === 'insurance';
   }
 
   protected isSelectedBox(position: BoxPosition): boolean {
-    return this.selectedBoxPosition === position && this.phase() === 'betting';
+    return this.selectedBoxPosition === position && this.store.phase() === 'betting';
   }
 
   protected getActiveHandIndex(position: BoxPosition): number {
@@ -183,11 +170,11 @@ export class PlayComponent implements OnInit {
 
   // Private helpers
   private canPlaceBets(): boolean {
-    const boxes = this.boxes();
+    const boxes = this.store.boxes();
     const activeBoxes = boxes.filter((b) => b.isActive);
     if (activeBoxes.length === 0) return false;
     if (activeBoxes.some((b) => b.bet <= 0)) return false;
-    const total = this.totalBet();
-    return total > 0 && total <= this.balance();
+    const total = this.store.currentBet();
+    return total > 0 && total <= this.store.balance();
   }
 }
