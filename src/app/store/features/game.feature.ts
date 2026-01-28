@@ -46,6 +46,7 @@ const INITIAL_GAME_STATE: GameSliceState = {
   phase: 'betting',
   result: null,
   message: 'Place your bets to start',
+  roundStartBalance: 0,
 };
 
 // ============================================================================
@@ -248,7 +249,8 @@ export function withGame() {
           .every((b) => b.hands.every((h) => h.isBusted));
 
         if (allBusted) {
-          resolveGame('lose', 'All hands busted. Dealer wins.');
+          const netResult = store.balance() - store.roundStartBalance();
+          resolveGame('lose', formatMoneyResult(netResult));
           return;
         }
 
@@ -321,13 +323,22 @@ export function withGame() {
         }, DEALER_CARD_ANIMATION_MS);
       };
 
+      const formatMoneyResult = (netResult: number) => {
+        if (netResult > 0) {
+          return `+$${netResult.toFixed(2)}`;
+        } else if (netResult < 0) {
+          return `-$${Math.abs(netResult).toFixed(2)}`;
+        } else {
+          return '$0.00';
+        }
+      };
+
       const compareHands = (dealerBusted: boolean) => {
         const dealerValue = calculateHandValue(store.dealerHand().cards).value;
 
         let totalWinnings = 0;
         let wins = 0;
         let losses = 0;
-        let pushes = 0;
 
         const boxes = store.boxes().map((box) => {
           if (!box.isActive) return box;
@@ -349,7 +360,6 @@ export function withGame() {
             } else if (playerValue === dealerValue) {
               totalWinnings += hand.bet;
               updatedHand.result = 'push';
-              pushes++;
             } else {
               updatedHand.result = 'lose';
               losses++;
@@ -361,25 +371,13 @@ export function withGame() {
           return { ...box, hands };
         });
 
-        if (totalWinnings > 0) {
-          patchState(store, { balance: store.balance() + totalWinnings });
-        }
+        const newBalance = store.balance() + totalWinnings;
+        patchState(store, { balance: newBalance, boxes });
 
-        let resultMessage = '';
-        if (dealerBusted) {
-          resultMessage = 'Dealer busted!';
-        } else if (wins > 0 && losses === 0) {
-          resultMessage = 'You win!';
-        } else if (losses > 0 && wins === 0) {
-          resultMessage = 'Dealer wins';
-        } else if (pushes > 0 && wins === 0 && losses === 0) {
-          resultMessage = 'Push';
-        } else {
-          resultMessage = `${wins} win${wins !== 1 ? 's' : ''}, ${losses} loss${losses !== 1 ? 'es' : ''}, ${pushes} push${pushes !== 1 ? 'es' : ''}`;
-        }
+        const netResult = newBalance - store.roundStartBalance();
+        const resultMessage = formatMoneyResult(netResult);
 
         const gameResult: GameResult = wins > losses ? 'win' : wins < losses ? 'lose' : 'push';
-        patchState(store, { boxes });
         resolveGame(gameResult, resultMessage);
       };
 
@@ -466,19 +464,14 @@ export function withGame() {
           return box;
         });
 
-        const anyInsuranceTaken = store.boxes().some((b) => b.isActive && b.insuranceBet > 0);
-
         if (dealerHasBlackjack || allResolved) {
+          const netResult = store.balance() - store.roundStartBalance();
           patchState(store, {
             boxes,
             dealerHand: { ...store.dealerHand(), cards: dealerCards },
             phase: 'resolved',
             result: allResolved ? 'blackjack' : 'lose',
-            message: dealerHasBlackjack
-              ? anyInsuranceTaken
-                ? 'Dealer Blackjack! Insurance paid.'
-                : 'Dealer Blackjack!'
-              : 'Blackjack!',
+            message: formatMoneyResult(netResult),
           });
         } else {
           const firstPlayableIndex = boxes.findIndex((b) => b.isActive && !b.isResolved);
@@ -539,7 +532,11 @@ export function withGame() {
           if (totalBet <= 0 || totalBet > store.balance()) return false;
           if (activeBoxes.some((b) => b.bet <= 0)) return false;
 
-          patchState(store, { balance: store.balance() - totalBet, message: 'Dealing cards...' });
+          patchState(store, {
+            roundStartBalance: store.balance(),
+            balance: store.balance() - totalBet,
+            message: 'Dealing cards...',
+          });
           dealInitialCards();
           return true;
         },

@@ -217,6 +217,7 @@ export interface GameSliceState {
   phase: GamePhase;
   result: GameResult;
   message: string;
+  roundStartBalance: number;
 }
 
 export interface BlackjackStoreState
