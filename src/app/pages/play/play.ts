@@ -6,7 +6,6 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BlackjackStore, BoxPosition } from '../../store';
 import { GameAction, ChipDenomination } from '../../shared/models';
-import { AnimationCoordinatorService } from '../../services/animation-coordinator.service';
 import { SettingsDialogComponent } from './settings-dialog/settings-dialog';
 import {
   GameHeaderComponent,
@@ -43,7 +42,6 @@ import {
 export class PlayComponent implements OnInit {
   protected readonly store = inject(BlackjackStore);
   private readonly dialog = inject(MatDialog);
-  private readonly animationCoordinator = inject(AnimationCoordinatorService);
 
   protected readonly defaultBet = 10;
   protected selectedBoxPosition: BoxPosition = 'center';

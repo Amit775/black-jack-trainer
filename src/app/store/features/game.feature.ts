@@ -30,10 +30,7 @@ import {
 import {
   CARD_DEAL_DURATION,
   CARD_FLIP_DURATION,
-  DEAL_STAGGER_DELAY,
-  DEALER_TURN_DELAY,
   DEALER_HIT_DELAY,
-  HOLE_CARD_REVEAL_DELAY,
   ANIMATION_BUFFER,
 } from '../../shared/animation.config';
 
@@ -55,7 +52,6 @@ const INITIAL_GAME_STATE: GameSliceState = {
 // Animation Timing (derived from config)
 // ============================================================================
 
-const ANIMATION_DELAY_MS = DEAL_STAGGER_DELAY;
 const SPLIT_DELAY_MS = 300;
 const DEAL_DELAY_MS = CARD_DEAL_DURATION + ANIMATION_BUFFER;
 const HOLE_CARD_REVEAL_MS = CARD_FLIP_DURATION + ANIMATION_BUFFER;

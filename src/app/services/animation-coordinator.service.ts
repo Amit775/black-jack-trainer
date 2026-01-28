@@ -1,6 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Subject, Observable, timer, firstValueFrom } from 'rxjs';
-import { take, map } from 'rxjs/operators';
 import {
   CARD_DEAL_DURATION,
   CARD_FLIP_DURATION,

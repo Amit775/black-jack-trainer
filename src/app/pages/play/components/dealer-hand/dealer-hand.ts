@@ -5,7 +5,6 @@ import {
   computed,
   output,
   signal,
-  effect,
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
