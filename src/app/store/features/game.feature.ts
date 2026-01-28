@@ -175,7 +175,6 @@ export function withGame() {
         if (!store.settings().splitAllowed) return false;
         const hand = activeHand();
         if (!hand || hand.cards.length !== 2) return false;
-        if (hand.isSplit) return false;
         if (!canSplitCards(hand.cards)) return false;
         return store.balance() >= hand.bet;
       });
@@ -344,10 +343,23 @@ export function withGame() {
           if (!box.isActive) return box;
 
           const hands = box.hands.map((hand) => {
-            if (hand.isBusted || hand.result) return hand;
+            // Reveal any sealed (face-down) cards from double down
+            let updatedHand = { ...hand };
+            const hasHiddenCard = hand.cards.some((c) => !c.faceUp);
+            if (hasHiddenCard) {
+              updatedHand.cards = hand.cards.map((c) => ({ ...c, faceUp: true }));
+              // Now check if busted
+              if (isBusted(updatedHand.cards)) {
+                updatedHand.isBusted = true;
+                updatedHand.result = 'lose';
+                losses++;
+                return updatedHand;
+              }
+            }
 
-            const playerValue = calculateHandValue(hand.cards).value;
-            const updatedHand = { ...hand };
+            if (updatedHand.isBusted || updatedHand.result) return updatedHand;
+
+            const playerValue = calculateHandValue(updatedHand.cards).value;
 
             if (dealerBusted) {
               totalWinnings += hand.bet * 2;
@@ -639,12 +651,10 @@ export function withGame() {
           updatedHand.isDoubledDown = true;
 
           const result = dealCardFromShoe(shoe, shoeState);
-          updatedHand.cards = [...updatedHand.cards, result.card];
+          const sealedCard = { ...result.card, faceUp: false };
+          updatedHand.cards = [...updatedHand.cards, sealedCard];
 
-          if (isBusted(updatedHand.cards)) {
-            updatedHand.isBusted = true;
-            updatedHand.result = 'lose';
-          }
+          // Don't check bust yet - card is sealed
           updatedHand.isStanding = true;
 
           hands[box.activeHandIndex] = updatedHand;
@@ -655,7 +665,7 @@ export function withGame() {
             shoe: result.shoe,
             shoeState: result.shoeState,
             boxes,
-            message: updatedHand.isBusted ? 'Busted!' : 'Doubled down',
+            message: 'Doubled down',
           });
 
           moveToNextHand();
@@ -667,7 +677,7 @@ export function withGame() {
 
           const hand = store.activeHand();
           if (!hand || hand.cards.length !== 2) return;
-          if (hand.isSplit || !canSplitCards(hand.cards)) return;
+          if (!canSplitCards(hand.cards)) return;
           if (store.balance() < hand.bet) return;
 
           patchState(store, { balance: store.balance() - hand.bet });
