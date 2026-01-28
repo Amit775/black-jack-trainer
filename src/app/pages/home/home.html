@@ -40,8 +40,7 @@
             <input
               matInput
               type="number"
-              [(ngModel)]="depositAmount"
-              min="1"
+              [formField]="balanceForm.depositAmount"
               placeholder="Enter amount"
             />
             <span matTextPrefix>$&nbsp;</span>
@@ -50,7 +49,7 @@
             mat-raised-button
             color="primary"
             (click)="deposit()"
-            [disabled]="depositAmount <= 0"
+            [disabled]="formModel().depositAmount <= 0"
           >
             <mat-icon>add</mat-icon>
             Deposit
@@ -64,9 +63,7 @@
             <input
               matInput
               type="number"
-              [(ngModel)]="withdrawAmount"
-              min="0"
-              [max]="balance()"
+              [formField]="balanceForm.withdrawAmount"
               placeholder="Enter amount"
             />
             <span matTextPrefix>$&nbsp;</span>
@@ -76,7 +73,7 @@
               mat-raised-button
               color="accent"
               (click)="withdraw()"
-              [disabled]="withdrawAmount <= 0 || withdrawAmount > balance()"
+              [disabled]="formModel().withdrawAmount <= 0 || formModel().withdrawAmount > balance()"
             >
               <mat-icon>remove</mat-icon>
               Withdraw

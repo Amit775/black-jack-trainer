@@ -1,4 +1,12 @@
-import { Card, Suit, SUITS, RANKS, SUIT_SYMBOLS, createEmptyHand, createEmptyBox } from '../../shared/models';
+import {
+  Card,
+  Suit,
+  SUITS,
+  RANKS,
+  SUIT_SYMBOLS,
+  createEmptyHand,
+  createEmptyBox,
+} from '../../shared/models';
 
 // ============================================================================
 // Card ID Generation

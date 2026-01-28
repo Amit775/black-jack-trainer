@@ -1,7 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { form, FormField } from '@angular/forms/signals';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -10,12 +10,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { BlackjackStore } from '../../store';
 
+interface BalanceFormModel {
+  depositAmount: number;
+  withdrawAmount: number;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    FormField,
     MatCardModule,
     MatButtonModule,
     MatInputModule,
@@ -30,22 +35,28 @@ export class HomeComponent {
   private readonly router = inject(Router);
   protected readonly store = inject(BlackjackStore);
 
-  protected depositAmount = 100;
-  protected withdrawAmount = 0;
+  // Signal-based form model
+  protected readonly formModel = signal<BalanceFormModel>({
+    depositAmount: 100,
+    withdrawAmount: 0,
+  });
+  protected readonly balanceForm = form(this.formModel);
 
   protected readonly balance = computed(() => this.store.balance());
 
   deposit(): void {
-    if (this.depositAmount > 0) {
-      this.store.deposit(this.depositAmount);
-      this.depositAmount = 100;
+		const { depositAmount } = this.formModel();
+    if (depositAmount > 0) {
+      this.store.deposit(depositAmount);
+      this.balanceForm.depositAmount().value.set(100);
     }
   }
 
   withdraw(): void {
-    if (this.withdrawAmount > 0 && this.withdrawAmount <= this.balance()) {
-      this.store.withdraw(this.withdrawAmount);
-      this.withdrawAmount = 0;
+    const { withdrawAmount } = this.formModel();
+    if (withdrawAmount > 0 && withdrawAmount <= this.balance()) {
+      this.store.withdraw(withdrawAmount);
+      this.balanceForm.withdrawAmount().value.set(0);
     }
   }
 

@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +13,7 @@ import { BlackjackStore, GameSettings } from '../../../store';
   selector: 'app-settings-dialog',
   standalone: true,
   imports: [
-    FormsModule,
+    FormField,
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -29,7 +29,9 @@ export class SettingsDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<SettingsDialogComponent>);
   private readonly store = inject(BlackjackStore);
 
-  protected settings: GameSettings = { ...this.store.settings() };
+  // Signal-based form model
+  protected readonly settingsModel = signal<GameSettings>({ ...this.store.settings() });
+  protected readonly settingsForm = form(this.settingsModel);
 
   protected readonly deckOptions = [1, 2, 4, 6, 8];
   protected readonly blackjackPayOptions = [
@@ -39,12 +41,13 @@ export class SettingsDialogComponent {
   ];
 
   save(): void {
-    const deckCountChanged = this.settings.numberOfDecks !== this.store.numberOfDecks();
-    this.store.updateSettings(this.settings);
+    const settings = this.settingsModel();
+    const deckCountChanged = settings.numberOfDecks !== this.store.numberOfDecks();
+    this.store.updateSettings(settings);
 
     // Reinitialize shoe if deck count changed
     if (deckCountChanged) {
-      this.store.initializeShoe(this.settings.numberOfDecks);
+      this.store.initializeShoe(settings.numberOfDecks);
     }
 
     this.dialogRef.close(true);
@@ -56,6 +59,6 @@ export class SettingsDialogComponent {
 
   resetDefaults(): void {
     this.store.resetSettings();
-    this.settings = { ...this.store.settings() };
+    this.settingsModel.set({ ...this.store.settings() });
   }
 }

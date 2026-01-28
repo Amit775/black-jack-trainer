@@ -4,7 +4,7 @@
   <div class="settings-form">
     <mat-form-field appearance="outline">
       <mat-label>Number of Decks</mat-label>
-      <mat-select [(ngModel)]="settings.numberOfDecks">
+      <mat-select [formField]="settingsForm.numberOfDecks">
         @for (option of deckOptions; track option) {
           <mat-option [value]="option"
             >{{ option }} {{ option === 1 ? 'Deck' : 'Decks' }}</mat-option
@@ -15,7 +15,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Blackjack Pays</mat-label>
-      <mat-select [(ngModel)]="settings.blackjackPays">
+      <mat-select [formField]="settingsForm.blackjackPays">
         @for (option of blackjackPayOptions; track option.value) {
           <mat-option [value]="option.value">{{ option.label }}</mat-option>
         }
@@ -25,21 +25,21 @@
     <mat-divider></mat-divider>
 
     <div class="toggle-options">
-      <mat-slide-toggle [(ngModel)]="settings.dealerHitsSoft17">
+      <mat-slide-toggle [formField]="settingsForm.dealerHitsSoft17">
         Dealer hits on soft 17
       </mat-slide-toggle>
 
-      <mat-slide-toggle [(ngModel)]="settings.doubleDownAllowed">
+      <mat-slide-toggle [formField]="settingsForm.doubleDownAllowed">
         Double down allowed
       </mat-slide-toggle>
 
-      <mat-slide-toggle [(ngModel)]="settings.splitAllowed"> Split allowed </mat-slide-toggle>
+      <mat-slide-toggle [formField]="settingsForm.splitAllowed"> Split allowed </mat-slide-toggle>
 
-      <mat-slide-toggle [(ngModel)]="settings.insuranceAllowed">
+      <mat-slide-toggle [formField]="settingsForm.insuranceAllowed">
         Insurance allowed
       </mat-slide-toggle>
 
-      <mat-slide-toggle [(ngModel)]="settings.surrenderAllowed">
+      <mat-slide-toggle [formField]="settingsForm.surrenderAllowed">
         Surrender allowed
       </mat-slide-toggle>
     </div>
