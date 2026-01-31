@@ -545,7 +545,7 @@
   }
 }
 
-// Player Boxes Area - Semi-circle layout
+// Player Boxes Area - Semi-circle layout (Desktop)
 .player-boxes-area {
   display: flex;
   justify-content: center;
@@ -554,6 +554,89 @@
   padding: 0 8px 80px; // Extra padding at bottom for chip rack
   min-height: 200px;
   flex-wrap: wrap;
+}
+
+// Mobile Carousel for Player Boxes
+.player-boxes-carousel {
+  display: none; // Hidden on desktop
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 4px;
+  min-height: 140px;
+
+  .carousel-nav {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    border-radius: 50%;
+
+    &:disabled {
+      opacity: 0.3;
+    }
+
+    mat-icon {
+      font-size: 24px;
+    }
+  }
+
+  .carousel-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    max-width: 200px;
+  }
+
+  .carousel-indicator {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.active {
+        background: #ffc107;
+        transform: scale(1.2);
+      }
+    }
+  }
+
+  .box-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+}
+
+// Mobile visibility utilities
+.desktop-only {
+  display: flex;
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: flex !important;
+  }
 }
 
 .box-position {
@@ -1276,99 +1359,126 @@
 // ============================================================================
 @media (max-width: 480px) {
   .play-container {
-    padding: 4px;
-    gap: 6px;
+    padding: 2px;
+    gap: 2px;
     min-height: calc(100vh - 56px);
     min-height: calc(100dvh - 56px);
+    height: calc(100vh - 56px);
+    height: calc(100dvh - 56px);
+    overflow: hidden;
   }
 
   .game-table {
-    border-radius: 20% 20% 30% 30% / 8% 8% 15% 15%;
-    padding: 12px 8px 70px;
-    min-height: 320px;
+    border-radius: 15% 15% 20% 20% / 5% 5% 10% 10%;
+    padding: 8px 6px 50px;
+    min-height: auto;
+    flex: 1;
     border-width: 2px;
   }
 
   .dealer-section {
-    padding-top: 40px;
+    padding-top: 30px;
   }
 
-  .player-boxes-area {
-    gap: 6px;
-    padding: 0 4px 60px;
-    min-height: 150px;
+  // Carousel adjustments for mobile
+  .player-boxes-carousel {
+    padding: 0 2px 45px;
+    min-height: 110px;
+    gap: 4px;
+
+    .carousel-nav {
+      width: 32px;
+      height: 32px;
+
+      mat-icon {
+        font-size: 20px;
+      }
+    }
+
+    .carousel-content {
+      max-width: 180px;
+    }
+
+    .carousel-indicator .dot {
+      width: 6px;
+      height: 6px;
+    }
+
+    .box-label {
+      font-size: 0.6rem;
+    }
   }
 
   .player-box {
-    min-width: 100px;
-    max-width: 150px;
+    min-width: 140px;
+    max-width: 180px;
     padding: 6px;
-    gap: 6px;
+    gap: 4px;
     border-width: 2px;
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .box-bet-content {
-    gap: 6px;
-    min-height: 60px;
+    gap: 4px;
+    min-height: 50px;
   }
 
   .display-chip {
-    width: 28px;
-    height: 28px;
-    font-size: 0.55rem;
+    width: 26px;
+    height: 26px;
+    font-size: 0.5rem;
     border-width: 2px;
   }
 
   .box-total-bet {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .card {
-    width: 42px;
-    height: 59px;
+    width: 38px;
+    height: 53px;
 
     .card-content {
       .card-rank {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
       }
       .card-suit {
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
     }
 
     &.small {
-      width: 36px;
-      height: 50px;
+      width: 32px;
+      height: 45px;
 
       .card-content {
         .card-rank {
-          font-size: 0.7rem;
+          font-size: 0.65rem;
         }
         .card-suit {
-          font-size: 0.9rem;
+          font-size: 0.85rem;
         }
       }
     }
   }
 
-  // Chip rack - more compact
+  // Chip rack - ultra compact
   .chip-rack-area {
-    bottom: 8px;
+    bottom: 4px;
   }
 
   .chip-rack {
-    padding: 6px 10px;
-    border-radius: 16px;
+    padding: 4px 8px;
+    border-radius: 12px;
   }
 
   .chips-row {
-    gap: 4px;
+    gap: 3px;
 
     .chip-btn {
-      width: 38px;
-      height: 38px;
-      font-size: 0.6rem;
+      width: 34px;
+      height: 34px;
+      font-size: 0.55rem;
       border-width: 2px;
 
       &::before {
@@ -1378,80 +1488,80 @@
     }
   }
 
-  // Table accessories - minimal on mobile
+  // Table accessories - minimal
   .table-accessories {
-    padding: 0 8px;
-    top: 4px;
+    padding: 0 6px;
+    top: 2px;
   }
 
   .shoe {
-    width: 45px;
-    height: 34px;
-  }
-
-  .discard-tray {
-    width: 38px;
+    width: 40px;
     height: 30px;
   }
 
+  .discard-tray {
+    width: 35px;
+    height: 26px;
+  }
+
   .shoe-info, .discard-info {
-    gap: 1px;
+    gap: 0;
     
     .cards-remaining, .cards-count {
-      font-size: 0.7rem;
+      font-size: 0.6rem;
     }
     .cards-label {
-      font-size: 0.45rem;
+      display: none; // Hide labels on mobile
     }
   }
 
   .shuffle-indicator {
-    font-size: 0.6rem;
-    padding: 4px 8px;
-    border-radius: 12px;
+    font-size: 0.55rem;
+    padding: 3px 6px;
+    border-radius: 10px;
 
     mat-icon {
-      font-size: 12px;
-      width: 12px;
-      height: 12px;
+      font-size: 10px;
+      width: 10px;
+      height: 10px;
     }
   }
 
-  // Game message - compact
+  // Game message - minimal
   .game-message {
-    font-size: 0.95rem;
-    padding: 6px;
-    min-height: 28px;
+    font-size: 0.85rem;
+    padding: 4px;
+    min-height: 22px;
   }
 
-  // Game controls
+  // Game controls - compact
   .game-controls {
-    min-height: 48px;
-    height: auto;
-    padding: 8px;
+    min-height: 40px;
+    height: 40px;
+    padding: 4px 8px;
   }
 
   .control-btn {
-    min-width: 70px;
-    height: 36px;
-    font-size: 0.75rem;
-    padding: 0 12px;
+    min-width: 60px;
+    height: 32px;
+    font-size: 0.7rem;
+    padding: 0 8px;
   }
 
   .action-buttons {
-    gap: 6px;
+    gap: 4px;
   }
 
   .betting-section {
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
 
     .total-bet {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
 
       strong {
-        font-size: 0.95rem;
+        font-size: 0.85rem;
       }
     }
   }
@@ -1459,75 +1569,75 @@
   // Insurance section
   .insurance-section {
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 
     .insurance-prompt {
-      font-size: 0.8rem;
-      gap: 4px;
+      font-size: 0.7rem;
+      gap: 3px;
 
       mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
       }
     }
 
     .insurance-buttons {
-      gap: 8px;
+      gap: 6px;
     }
   }
 
-  // Add box button
+  // Add box button - smaller
   .add-box-btn {
-    width: 60px !important;
-    height: 60px !important;
+    width: 50px !important;
+    height: 50px !important;
     border-width: 2px !important;
 
     mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
   }
 
   // Hand container adjustments
   .hand-container {
-    padding: 6px;
-    gap: 4px;
-    border-radius: 8px;
+    padding: 4px;
+    gap: 2px;
+    border-radius: 6px;
   }
 
   .hand-info {
-    gap: 4px;
+    gap: 3px;
 
     .hand-value-badge {
-      padding: 2px 6px;
-      font-size: 0.75rem;
+      padding: 1px 5px;
+      font-size: 0.65rem;
     }
 
     .split-badge {
-      padding: 1px 4px;
-      font-size: 0.6rem;
+      padding: 1px 3px;
+      font-size: 0.5rem;
     }
   }
 
   .bet-display {
-    gap: 4px;
+    gap: 3px;
 
     .bet-chip {
-      padding: 2px 8px;
-      font-size: 0.7rem;
+      padding: 1px 6px;
+      font-size: 0.6rem;
     }
 
     .result-badge {
-      padding: 1px 6px;
-      font-size: 0.65rem;
+      padding: 1px 4px;
+      font-size: 0.55rem;
     }
   }
 
   // Cards row
   .cards-row {
-    gap: 4px;
+    gap: 2px;
   }
 }
 
@@ -1535,45 +1645,91 @@
 // Extra small screens (360px and below)
 // ============================================================================
 @media (max-width: 360px) {
-  .game-table {
-    padding: 10px 6px 60px;
-    min-height: 280px;
+  .play-container {
+    padding: 1px;
+    gap: 1px;
   }
 
-  .player-boxes-area {
-    gap: 4px;
-    padding-bottom: 55px;
+  .game-table {
+    padding: 6px 4px 45px;
+    border-radius: 10% 10% 15% 15% / 3% 3% 8% 8%;
+  }
+
+  .dealer-section {
+    padding-top: 25px;
+  }
+
+  .player-boxes-carousel {
+    min-height: 100px;
+    padding-bottom: 40px;
+
+    .carousel-nav {
+      width: 28px;
+      height: 28px;
+
+      mat-icon {
+        font-size: 18px;
+      }
+    }
+
+    .carousel-content {
+      max-width: 150px;
+    }
   }
 
   .player-box {
-    min-width: 85px;
-    max-width: 120px;
+    min-width: 120px;
+    max-width: 150px;
     padding: 4px;
   }
 
   .card {
-    width: 36px;
-    height: 50px;
+    width: 32px;
+    height: 45px;
 
     .card-content {
       .card-rank {
-        font-size: 0.75rem;
+        font-size: 0.65rem;
       }
       .card-suit {
-        font-size: 0.95rem;
+        font-size: 0.85rem;
       }
     }
   }
 
   .chips-row .chip-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 0.55rem;
+    width: 30px;
+    height: 30px;
+    font-size: 0.5rem;
+  }
+
+  .game-controls {
+    min-height: 36px;
+    height: 36px;
+    padding: 2px 4px;
   }
 
   .control-btn {
-    min-width: 60px;
-    font-size: 0.7rem;
-    padding: 0 8px;
+    min-width: 50px;
+    height: 28px;
+    font-size: 0.6rem;
+    padding: 0 6px;
+  }
+
+  .game-message {
+    font-size: 0.75rem;
+    padding: 2px;
+    min-height: 18px;
+  }
+
+  .add-box-btn {
+    width: 44px !important;
+    height: 44px !important;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
   }
 }

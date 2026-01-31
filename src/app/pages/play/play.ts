@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, computed, ChangeDetectionStrategy, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -47,6 +47,10 @@ export class PlayComponent implements OnInit {
   protected selectedBoxPosition: BoxPosition = 'center';
 
   protected readonly boxPositions: BoxPosition[] = ['left', 'center', 'right'];
+  
+  // Mobile carousel state
+  protected readonly isMobile = signal(false);
+  protected readonly mobileBoxIndex = signal(1); // 0=left, 1=center, 2=right
 
   // Only keep computed signals that add value or combine multiple sources
   protected readonly controlsState = computed<GameControlsState>(() => ({
@@ -61,6 +65,37 @@ export class PlayComponent implements OnInit {
     // Store initializes shoe in onInit hook
     this.store.newGame();
     this.store.setBoxBet('center', this.defaultBet);
+    this.checkMobile();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkMobile();
+  }
+
+  private checkMobile(): void {
+    this.isMobile.set(window.innerWidth <= 600);
+  }
+
+  // Mobile carousel navigation
+  protected get currentMobilePosition(): BoxPosition {
+    return this.boxPositions[this.mobileBoxIndex()];
+  }
+
+  protected navigateBox(direction: 'prev' | 'next'): void {
+    const current = this.mobileBoxIndex();
+    if (direction === 'prev' && current > 0) {
+      this.mobileBoxIndex.set(current - 1);
+      this.selectedBoxPosition = this.boxPositions[current - 1];
+    } else if (direction === 'next' && current < 2) {
+      this.mobileBoxIndex.set(current + 1);
+      this.selectedBoxPosition = this.boxPositions[current + 1];
+    }
+  }
+
+  protected canNavigate(direction: 'prev' | 'next'): boolean {
+    const current = this.mobileBoxIndex();
+    return direction === 'prev' ? current > 0 : current < 2;
   }
 
   // Box helpers

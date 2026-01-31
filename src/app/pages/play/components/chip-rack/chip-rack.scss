@@ -64,34 +64,42 @@
 // Mobile responsive
 @media (max-width: 480px) {
   .chip-rack-area {
-    padding: 8px 0;
+    padding: 4px 0;
   }
 
   .chip-rack {
-    padding: 8px 12px;
+    padding: 6px 10px;
   }
 
-  .chips-row {
-    gap: 6px;
-  }
-
-  .chip-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 9px;
-    border-width: 2px;
-  }
-}
-
-@media (max-width: 360px) {
   .chips-row {
     gap: 4px;
   }
 
   .chip-btn {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     font-size: 8px;
+    border-width: 2px;
+  }
+}
+
+@media (max-width: 360px) {
+  .chip-rack-area {
+    padding: 2px 0;
+  }
+
+  .chip-rack {
+    padding: 4px 8px;
+  }
+
+  .chips-row {
+    gap: 3px;
+  }
+
+  .chip-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 7px;
   }
 }
 

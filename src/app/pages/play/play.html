@@ -29,8 +29,8 @@
       </span>
     </div>
 
-    <!-- Player Boxes Area -->
-    <div class="player-boxes-area">
+    <!-- Player Boxes Area - Desktop -->
+    <div class="player-boxes-area desktop-only">
       @for (position of boxPositions; track position) {
         <div
           class="box-position"
@@ -68,6 +68,65 @@
           }
         </div>
       }
+    </div>
+
+    <!-- Player Boxes Area - Mobile Carousel -->
+    <div class="player-boxes-carousel mobile-only">
+      <button
+        class="carousel-nav prev"
+        mat-icon-button
+        (click)="navigateBox('prev')"
+        [disabled]="!canNavigate('prev')"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+
+      <div class="carousel-content">
+        <div class="carousel-indicator">
+          @for (pos of boxPositions; track pos; let i = $index) {
+            <span 
+              class="dot" 
+              [class.active]="i === mobileBoxIndex()"
+              (click)="mobileBoxIndex.set(i); selectedBoxPosition = boxPositions[i]"
+            ></span>
+          }
+        </div>
+        
+        @if (getBox(currentMobilePosition); as box) {
+          <div class="box-label">{{ currentMobilePosition | titlecase }} Box</div>
+          @if (box.isActive) {
+            <app-player-box
+              [box]="box"
+              [gamePhase]="store.phase()"
+              [isActiveBox]="isActiveBox(currentMobilePosition)"
+              [isInsuranceBox]="isInsuranceBox(currentMobilePosition)"
+              [isSelectedBox]="true"
+              [activeHandIndex]="getActiveHandIndex(currentMobilePosition)"
+              (boxSelected)="onBoxSelected($event)"
+              (chipRemoved)="onChipRemoved($event)"
+              (boxRemoved)="onBoxRemoved($event)"
+              (cardAnimationComplete)="onCardAnimationComplete($event)"
+            />
+          } @else if (store.phase() === 'betting') {
+            <button
+              class="add-box-btn"
+              mat-fab
+              (click)="onToggleBox(currentMobilePosition)"
+            >
+              <mat-icon>add</mat-icon>
+            </button>
+          }
+        }
+      </div>
+
+      <button
+        class="carousel-nav next"
+        mat-icon-button
+        (click)="navigateBox('next')"
+        [disabled]="!canNavigate('next')"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
 
     <!-- Chip Rack -->

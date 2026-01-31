@@ -472,35 +472,70 @@
 
 @media (max-width: 400px) {
   :host {
-    --card-width: 42px;
-    --card-height: 60px;
-    --card-radius: 5px;
+    --card-width: 38px;
+    --card-height: 53px;
+    --card-radius: 4px;
+    --deal-duration: 300ms;
+    --flip-duration: 350ms;
   }
 
   :host(.card-small) {
-    --card-width: 36px;
-    --card-height: 51px;
-    --card-radius: 4px;
+    --card-width: 32px;
+    --card-height: 45px;
+    --card-radius: 3px;
   }
 
   :host(.card-medium) {
-    --card-width: 42px;
-    --card-height: 60px;
-    --card-radius: 5px;
+    --card-width: 38px;
+    --card-height: 53px;
+    --card-radius: 4px;
   }
 
   :host(.card-large) {
-    --card-width: 55px;
-    --card-height: 78px;
-    --card-radius: 6px;
+    --card-width: 48px;
+    --card-height: 67px;
+    --card-radius: 5px;
   }
 
   .card-face {
-    padding: 3px;
+    padding: 2px;
   }
 
   // Disable hover effect on touch devices
   :host(:not(.is-face-down)) .playing-card:hover {
     transform: none;
+  }
+
+  // Even shorter animation distance
+  @keyframes cardSlideIn {
+    0% {
+      opacity: 0;
+      transform: 
+        translateX(-100px) 
+        translateY(-30px)
+        rotate(-5deg)
+        scale(0.8);
+    }
+    30% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      transform: 
+        translateX(0) 
+        translateY(0)
+        rotate(0deg)
+        scale(1);
+    }
+  }
+
+  @keyframes splitMoveLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-15px); }
+  }
+
+  @keyframes splitMoveRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(15px); }
   }
 }

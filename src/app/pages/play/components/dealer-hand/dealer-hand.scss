@@ -223,32 +223,54 @@
 
 @media (max-width: 400px) {
   .dealer-section {
-    padding: 8px 6px 12px;
+    padding: 4px 4px 8px;
+  }
+
+  .dealer-area {
+    gap: 4px;
+  }
+
+  .hand-label {
+    gap: 4px;
   }
 
   .dealer-label {
-    font-size: 10px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+
+  .hand-value-container {
+    padding: 2px 8px;
   }
 
   .hand-value {
-    font-size: 12px;
+    font-size: 11px;
+  }
+
+  .blackjack-badge {
+    font-size: 10px;
   }
 
   .cards-row {
-    min-height: 70px;
+    min-height: 55px;
+    gap: 4px;
   }
 
   .dealer-cards app-playing-card {
-    --card-width: 45px;
-    --card-height: 64px;
+    --card-width: 38px;
+    --card-height: 53px;
 
     &:not(:first-child) {
-      margin-left: -10px;
+      margin-left: -8px;
     }
   }
 
   .empty-hand-placeholder {
-    min-width: 100px;
-    min-height: 60px;
+    min-width: 80px;
+    min-height: 50px;
+  }
+
+  .placeholder-text {
+    font-size: 8px;
   }
 }

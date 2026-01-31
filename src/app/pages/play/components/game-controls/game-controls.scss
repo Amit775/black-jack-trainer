@@ -151,21 +151,39 @@
 
 @media (max-width: 400px) {
   .game-controls {
-    min-height: 50px;
-    padding: 8px 6px;
+    min-height: 36px;
+    padding: 4px;
   }
 
   .control-btn {
-    min-width: 65px;
-    font-size: 12px;
-    padding: 0 8px;
+    min-width: 55px;
+    height: 28px;
+    font-size: 11px;
+    padding: 0 6px;
 
     mat-icon {
       display: none; // Hide icons on very small screens
     }
   }
 
-  .insurance-section .insurance-prompt {
+  .insurance-section {
+    gap: 4px;
+
+    .insurance-prompt {
+      font-size: 11px;
+    }
+
+    .insurance-buttons {
+      gap: 4px;
+    }
+  }
+
+  .betting-section .total-bet {
+    font-size: 11px;
+  }
+
+  .dealer-turn-indicator {
     font-size: 12px;
+    gap: 4px;
   }
 }
