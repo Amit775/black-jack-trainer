@@ -11,8 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BlackjackStore, BoxPosition } from '../../store';
-import { GameAction, ChipDenomination } from '../../shared/models';
+import { BlackjackStore } from '../../store';
+import { GameAction, ChipDenomination, Box } from '../../shared/models';
 import { SettingsDialogComponent } from './settings-dialog/settings-dialog';
 import {
   GameHeaderComponent,
@@ -32,7 +32,8 @@ import { calculateHandValue } from '../../store/utils/card.utils';
  * Represents an item in the carousel (either a box or a specific hand within a split box)
  */
 export interface CarouselItem {
-  position: BoxPosition;
+  boxId: string;
+  boxIndex: number;
   handIndex: number;
   isSplitHand: boolean;
 }
@@ -64,32 +65,29 @@ export class PlayComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
 
   protected readonly defaultBet = 10;
-  protected readonly boxPositions: BoxPosition[] = ['left', 'center', 'right'];
 
-  /** Currently selected box for betting */
-  protected selectedBoxPosition: BoxPosition = 'center';
+  /** Currently selected box ID for betting */
+  protected selectedBoxId = signal<string | null>(null);
 
   /** Current carousel index - bound to carousel component */
-  protected readonly carouselIndex = signal(1);
+  protected readonly carouselIndex = signal(0);
 
   /** Dynamic carousel items - expands when hands are split */
   protected readonly carouselItems = computed<CarouselItem[]>(() => {
     const boxes = this.store.boxes();
     const items: CarouselItem[] = [];
 
-    for (const position of this.boxPositions) {
-      const box = boxes.find((b) => b.position === position);
-
-      if (box?.isActive && box.hands.length > 1) {
+    boxes.forEach((box, boxIndex) => {
+      if (box.isActive && box.hands.length > 1) {
         // Split box - add each hand as separate item
         for (let i = 0; i < box.hands.length; i++) {
-          items.push({ position, handIndex: i, isSplitHand: true });
+          items.push({ boxId: box.id, boxIndex, handIndex: i, isSplitHand: true });
         }
       } else {
         // Regular box or inactive - single item
-        items.push({ position, handIndex: 0, isSplitHand: false });
+        items.push({ boxId: box.id, boxIndex, handIndex: 0, isSplitHand: false });
       }
-    }
+    });
 
     return items;
   });
@@ -109,14 +107,14 @@ export class PlayComponent implements OnInit {
     // During active gameplay, sync to the active hand
     if (phase === 'playing' && activeBox) {
       const index = items.findIndex(
-        (item) => item.position === activeBox.position && item.handIndex === activeBox.activeHandIndex
+        (item) => item.boxId === activeBox.id && item.handIndex === activeBox.activeHandIndex
       );
       if (index !== -1) return index;
     }
 
     // During insurance, sync to the insurance box
     if (phase === 'insurance' && insuranceBox) {
-      const index = items.findIndex((item) => item.position === insuranceBox.position);
+      const index = items.findIndex((item) => item.boxId === insuranceBox.id);
       if (index !== -1) return index;
     }
 
@@ -142,7 +140,12 @@ export class PlayComponent implements OnInit {
 
   ngOnInit(): void {
     this.store.newGame();
-    this.store.setBoxBet('center', this.defaultBet);
+    // Set bet on the first (and only) box
+    const firstBox = this.store.boxes()[0];
+    if (firstBox) {
+      this.selectedBoxId.set(firstBox.id);
+      this.store.setBoxBet(firstBox.id, this.defaultBet);
+    }
   }
 
   /** Handle carousel index change from user interaction */
@@ -150,68 +153,80 @@ export class PlayComponent implements OnInit {
     this.carouselIndex.set(index);
     const items = this.carouselItems();
     if (index >= 0 && index < items.length) {
-      this.selectedBoxPosition = items[index].position;
+      this.selectedBoxId.set(items[index].boxId);
     }
   }
 
   // Box helpers
-  protected getBox(position: BoxPosition) {
-    return this.store.boxes().find((b) => b.position === position);
+  protected getBox(boxId: string): Box | undefined {
+    return this.store.boxes().find((b) => b.id === boxId);
   }
 
-  protected isActiveBox(position: BoxPosition): boolean {
+  protected getBoxByIndex(index: number): Box | undefined {
+    return this.store.boxes()[index];
+  }
+
+  protected isActiveBox(boxId: string): boolean {
     const activeBox = this.store.activeBox();
-    return activeBox?.position === position && this.store.phase() === 'playing';
+    return activeBox?.id === boxId && this.store.phase() === 'playing';
   }
 
-  protected isInsuranceBox(position: BoxPosition): boolean {
+  protected isInsuranceBox(boxId: string): boolean {
     const insuranceBox = this.store.insuranceBox();
-    return insuranceBox?.position === position && this.store.phase() === 'insurance';
+    return insuranceBox?.id === boxId && this.store.phase() === 'insurance';
   }
 
-  protected isSelectedBox(position: BoxPosition): boolean {
-    return this.selectedBoxPosition === position && this.store.phase() === 'betting';
+  protected isSelectedBox(boxId: string): boolean {
+    return this.selectedBoxId() === boxId && this.store.phase() === 'betting';
   }
 
-  protected getActiveHandIndex(position: BoxPosition): number {
-    const box = this.getBox(position);
+  protected getActiveHandIndex(boxId: string): number {
+    const box = this.getBox(boxId);
     return box?.activeHandIndex ?? 0;
+  }
+
+  protected canRemoveBox(): boolean {
+    return this.store.boxes().filter((b) => b.isActive).length > 1;
   }
 
   // Event handlers
   protected onBoxSelected(event: PlayerBoxEvent): void {
-    const box = this.getBox(event.position);
+    const box = this.getBox(event.boxId);
     if (box?.isActive) {
-      this.selectedBoxPosition = event.position;
+      this.selectedBoxId.set(event.boxId);
     }
   }
 
   protected onChipRemoved(event: ChipRemoveEvent): void {
-    const box = this.getBox(event.position);
+    const box = this.getBox(event.boxId);
     if (box?.isActive && box.bet >= event.chipValue) {
-      this.store.setBoxBet(event.position, box.bet - event.chipValue);
+      this.store.setBoxBet(event.boxId, box.bet - event.chipValue);
     }
   }
 
   protected onBoxRemoved(event: PlayerBoxEvent): void {
-    this.store.toggleBox(event.position);
+    this.store.removeBox(event.boxId);
   }
 
   protected onChipSelected(chip: ChipDenomination): void {
-    const box = this.getBox(this.selectedBoxPosition);
+    const selectedId = this.selectedBoxId();
+    if (!selectedId) return;
+    const box = this.getBox(selectedId);
     if (box?.isActive) {
-      this.store.setBoxBet(this.selectedBoxPosition, box.bet + chip);
+      this.store.setBoxBet(selectedId, box.bet + chip);
     }
   }
 
-  protected onToggleBox(position: BoxPosition): void {
-    const wasActive = this.getBox(position)?.isActive;
-    this.store.toggleBox(position);
-    const box = this.getBox(position);
-    if (box?.isActive && !wasActive) {
-      this.selectedBoxPosition = position;
-      if (box.bet === 0) {
-        this.store.setBoxBet(position, this.defaultBet);
+  protected onAddBox(): void {
+    const newBoxId = this.store.addBox();
+    if (newBoxId) {
+      this.selectedBoxId.set(newBoxId);
+      this.store.setBoxBet(newBoxId, this.defaultBet);
+      // Update carousel to show new box
+      const items = this.carouselItems();
+      const newIndex = items.findIndex((item) => item.boxId === newBoxId);
+      if (newIndex !== -1) {
+        this.carouselIndex.set(newIndex);
       }
     }
   }
@@ -257,7 +272,7 @@ export class PlayComponent implements OnInit {
 
   // Private helpers
   private getIndicatorForItem(item: CarouselItem): CarouselIndicator {
-    const box = this.getBox(item.position);
+    const box = this.getBox(item.boxId);
 
     if (!box?.isActive) {
       return { state: 'inactive' };
@@ -276,7 +291,7 @@ export class PlayComponent implements OnInit {
 
     if (hand.result) {
       state = `result-${hand.result}` as CarouselIndicator['state'];
-    } else if (this.isActiveBox(item.position) && box.activeHandIndex === item.handIndex) {
+    } else if (this.isActiveBox(item.boxId) && box.activeHandIndex === item.handIndex) {
       state = 'playing';
     } else if (hand.cards.length > 0) {
       state = 'has-cards';

@@ -13,7 +13,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   Box,
-  BoxPosition,
   Hand,
   Card,
   GamePhase,
@@ -27,11 +26,11 @@ import { AnimationCoordinatorService } from '../../../../services/animation-coor
 import { calculateHandValue } from '../../../../store/utils/card.utils';
 
 export interface PlayerBoxEvent {
-  position: BoxPosition;
+  boxId: string;
 }
 
 export interface ChipRemoveEvent {
-  position: BoxPosition;
+  boxId: string;
   chipValue: number;
 }
 
@@ -55,6 +54,9 @@ export class PlayerBoxComponent {
   /** The box data to display */
   readonly box = input.required<Box>();
 
+  /** The box ID */
+  readonly boxId = input.required<string>();
+
   /** Current game phase */
   readonly gamePhase = input.required<GamePhase>();
 
@@ -73,6 +75,9 @@ export class PlayerBoxComponent {
   /** When >= 0, only show this specific hand (for mobile carousel split view) */
   readonly showOnlyHandIndex = input<number>(-1);
 
+  /** Whether this box can be removed (more than one box exists) */
+  readonly canRemove = input<boolean>(false);
+
   /** Emitted when user clicks on the box to select it for betting */
   readonly boxSelected = output<PlayerBoxEvent>();
 
@@ -88,7 +93,6 @@ export class PlayerBoxComponent {
   // Track revealed cards for each hand
   private readonly revealedCards = signal<Set<string>>(new Set());
 
-  protected readonly position = computed(() => this.box().position);
   protected readonly bet = computed(() => this.box().bet);
   protected readonly hands = computed(() => this.box().hands);
   
@@ -104,7 +108,6 @@ export class PlayerBoxComponent {
     return allHands.map((hand, index) => ({ hand, originalIndex: index }));
   });
   protected readonly isBetting = computed(() => this.gamePhase() === 'betting');
-  protected readonly isCenter = computed(() => this.position() === 'center');
   protected readonly isPlaying = computed(() => this.gamePhase() === 'playing');
 
   protected readonly chipsForBet = computed(() => {
@@ -169,18 +172,18 @@ export class PlayerBoxComponent {
 
   protected onBoxClick(): void {
     if (this.isBetting()) {
-      this.boxSelected.emit({ position: this.position() });
+      this.boxSelected.emit({ boxId: this.boxId() });
     }
   }
 
   protected onChipRemove(chipValue: number, event: Event): void {
     event.stopPropagation();
-    this.chipRemoved.emit({ position: this.position(), chipValue });
+    this.chipRemoved.emit({ boxId: this.boxId(), chipValue });
   }
 
   protected onRemoveBox(event: Event): void {
     event.stopPropagation();
-    this.boxRemoved.emit({ position: this.position() });
+    this.boxRemoved.emit({ boxId: this.boxId() });
   }
 
   protected onCardEnterComplete(cardId: string): void {
