@@ -140,6 +140,14 @@
   gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
+
+  &.single-hand-view {
+    .hand-container {
+      width: auto;
+      min-width: 0;
+    }
+  }
 }
 
 .hand-container {
@@ -226,16 +234,6 @@
   letter-spacing: 0.5px;
 }
 
-.split-badge {
-  background: linear-gradient(135deg, #7c4dff 0%, #651fff 100%);
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  color: white;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
 .double-badge {
   background: linear-gradient(135deg, #ff9800 0%, #e65100 100%);
   padding: 2px 6px;
@@ -251,13 +249,13 @@
 
 .cards-row {
   display: flex;
-  gap: 4px;
+  justify-content: center;
   position: relative;
 
   app-playing-card {
     transition: transform 0.2s ease, z-index 0s;
 
-    // Stack cards slightly for compact display
+    // Stack cards with overlap for compact display
     &:not(:first-child) {
       margin-left: -15px;
     }
@@ -446,5 +444,153 @@
   }
   100% {
     box-shadow: 0 0 15px rgba(102, 187, 106, 0.3);
+  }
+}
+
+// ============================================================================
+// Mobile Responsive
+// ============================================================================
+
+@media (max-width: 600px) {
+  .player-box {
+    min-width: 130px;
+    min-height: 120px;
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .box-bet-content {
+    gap: 6px;
+  }
+
+  .box-chips-display {
+    gap: 3px;
+  }
+
+  .display-chip {
+    width: 30px;
+    height: 30px;
+    font-size: 9px;
+    border-width: 2px;
+  }
+
+  .box-total-bet {
+    font-size: 14px;
+  }
+
+  .hand-container {
+    padding: 6px;
+    gap: 4px;
+  }
+
+  .hand-info {
+    gap: 4px;
+  }
+
+  .hand-value-badge {
+    padding: 2px 8px;
+    font-size: 11px;
+    min-width: 28px;
+  }
+
+  .double-badge {
+    padding: 1px 5px;
+    font-size: 8px;
+  }
+
+  .cards-row {
+    gap: 2px;
+
+    app-playing-card:not(:first-child) {
+      margin-left: -12px;
+    }
+
+    &.many-cards app-playing-card:not(:first-child) {
+      margin-left: -18px;
+    }
+  }
+
+  .bet-display {
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  .bet-chip {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+
+  .result-badge {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+
+  .remove-box-btn {
+    width: 24px !important;
+    height: 24px !important;
+    top: -6px;
+    right: -6px;
+    opacity: 1; // Always visible on touch devices
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .player-box {
+    min-width: 100px;
+    min-height: 100px;
+    padding: 6px;
+    border-radius: 8px;
+    border-width: 2px;
+  }
+
+  .display-chip {
+    width: 26px;
+    height: 26px;
+    font-size: 8px;
+  }
+
+  .box-total-bet {
+    font-size: 12px;
+  }
+
+  .hand-container {
+    padding: 4px;
+    border-radius: 6px;
+  }
+
+  .hand-value-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+    min-width: 24px;
+  }
+
+  .cards-row {
+    app-playing-card:not(:first-child) {
+      margin-left: -10px;
+    }
+
+    &.many-cards app-playing-card:not(:first-child) {
+      margin-left: -15px;
+    }
+  }
+
+  .bet-chip {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+
+  .result-badge {
+    padding: 1px 5px;
+    font-size: 8px;
+  }
+
+  .no-bet-text {
+    font-size: 10px;
   }
 }

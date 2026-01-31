@@ -29,27 +29,24 @@
       </span>
     </div>
 
-    <!-- Player Boxes Area -->
-    <div class="player-boxes-area">
-      @for (position of boxPositions; track position) {
-        <div
-          class="box-position"
-          [class.box-left]="position === 'left'"
-          [class.box-center]="position === 'center'"
-          [class.box-right]="position === 'right'"
-          [class.active-box]="isActiveBox(position)"
-          [class.insurance-box]="isInsuranceBox(position)"
-          [class.selected-box]="isSelectedBox(position)"
-        >
-          @if (getBox(position); as box) {
+    <!-- Player Boxes Carousel -->
+    <app-carousel
+      [activeIndex]="activeCarouselIndex()"
+      [indicators]="carouselIndicators()"
+      (activeIndexChange)="onCarouselIndexChange($event)"
+    >
+      @for (item of carouselItems(); track item.position + '-' + item.handIndex) {
+        <ng-template carouselItem>
+          @if (getBox(item.position); as box) {
             @if (box.isActive) {
               <app-player-box
                 [box]="box"
                 [gamePhase]="store.phase()"
-                [isActiveBox]="isActiveBox(position)"
-                [isInsuranceBox]="isInsuranceBox(position)"
-                [isSelectedBox]="isSelectedBox(position)"
-                [activeHandIndex]="getActiveHandIndex(position)"
+                [isActiveBox]="isActiveBox(item.position)"
+                [isInsuranceBox]="isInsuranceBox(item.position)"
+                [isSelectedBox]="true"
+                [activeHandIndex]="item.handIndex"
+                [showOnlyHandIndex]="item.isSplitHand ? item.handIndex : -1"
                 (boxSelected)="onBoxSelected($event)"
                 (chipRemoved)="onChipRemoved($event)"
                 (boxRemoved)="onBoxRemoved($event)"
@@ -59,16 +56,15 @@
               <button
                 class="add-box-btn"
                 mat-fab
-                (click)="onToggleBox(position)"
-                [matTooltip]="'Add ' + position + ' box'"
+                (click)="onToggleBox(item.position)"
               >
                 <mat-icon>add</mat-icon>
               </button>
             }
           }
-        </div>
+        </ng-template>
       }
-    </div>
+    </app-carousel>
 
     <!-- Chip Rack -->
     @if (store.phase() === 'betting') {

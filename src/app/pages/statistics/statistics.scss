@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  box-sizing: border-box;
 }
 
 .stats-overview {
@@ -26,6 +27,12 @@
 
     @media (max-width: 600px) {
       grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      padding: 16px 0;
+    }
+
+    @media (max-width: 400px) {
+      gap: 12px;
     }
   }
 
@@ -41,6 +48,8 @@
 
     @media (max-width: 600px) {
       grid-template-columns: 1fr;
+      gap: 16px;
+      padding: 16px 0;
     }
   }
 
@@ -90,12 +99,41 @@
 
       @media (max-width: 600px) {
         grid-column: span 1;
+        padding: 12px;
       }
 
       .stat-value {
         font-size: 2.5rem;
+
+        @media (max-width: 480px) {
+          font-size: 2rem;
+        }
       }
     }
+
+    @media (max-width: 480px) {
+      gap: 4px;
+
+      .stat-label {
+        font-size: 0.8rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+
+      &.large .stat-value {
+        font-size: 1.7rem;
+      }
+    }
+  }
+}
+
+// Mobile responsiveness for container
+@media (max-width: 480px) {
+  .statistics-container {
+    padding: 16px;
+    gap: 16px;
   }
 }
 

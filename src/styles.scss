@@ -17,6 +17,9 @@ html {
     typography: Roboto,
     density: 0,
   ));
+
+  // Prevent horizontal scroll on mobile
+  overflow-x: hidden;
 }
 
 body {
@@ -33,5 +36,21 @@ body {
   // Reset the user agent margin.
   margin: 0;
   height: 100%;
+
+  // Prevent horizontal scroll on mobile
+  overflow-x: hidden;
+  
+  // Better touch handling on mobile
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+// Ensure buttons and interactive elements are touch-friendly
+button, 
+[role="button"],
+.mat-mdc-button,
+.mat-mdc-icon-button,
+.mat-mdc-fab {
+  touch-action: manipulation;
 }
 /* You can add global styles to this file, and also import other style files */

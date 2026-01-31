@@ -4,8 +4,10 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   min-height: calc(100vh - 80px);
+  min-height: calc(100dvh - 80px); // Dynamic viewport height for mobile
+  box-sizing: border-box;
 }
 
 .game-header {
@@ -40,15 +42,15 @@
     radial-gradient(ellipse 100% 80% at 50% 0%, rgba(0,0,0,0.3) 0%, transparent 40%),
     linear-gradient(180deg, #1a472a 0%, #2d5a3c 30%, #1a472a 100%);
   border-radius: 50% 50% 50% 50% / 20% 20% 30% 30%;
-  padding: 24px 32px 48px;
+  padding: 24px 24px 48px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 500px;
+  min-height: 400px;
   box-shadow: 
     inset 0 0 80px rgba(0, 0, 0, 0.4),
     0 10px 40px rgba(0, 0, 0, 0.3);
-  border: 6px solid #8b4513;
+  border: 4px solid #8b4513;
   position: relative;
   overflow: hidden;
 
@@ -310,31 +312,6 @@
   }
 }
 
-// Split animation - card moves to the side
-@keyframes card-split-left {
-  0% {
-    transform: translateX(0) scale(1);
-  }
-  50% {
-    transform: translateX(-30px) scale(0.95);
-  }
-  100% {
-    transform: translateX(0) scale(1);
-  }
-}
-
-@keyframes card-split-right {
-  0% {
-    transform: translateX(0) scale(1);
-  }
-  50% {
-    transform: translateX(30px) scale(0.95);
-  }
-  100% {
-    transform: translateX(0) scale(1);
-  }
-}
-
 .card-dealing {
   animation: card-deal 0.45s ease-out both;
 }
@@ -401,14 +378,6 @@
       font-size: 1.6rem;
     }
   }
-}
-
-.card-split-left {
-  animation: card-split-left 0.4s ease-out both;
-}
-
-.card-split-right {
-  animation: card-split-right 0.4s ease-out both;
 }
 
 // Dealer Section (12 o'clock)
@@ -543,14 +512,16 @@
   }
 }
 
-// Player Boxes Area - Semi-circle layout
-.player-boxes-area {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 24px;
-  padding: 0 16px 100px; // Extra padding at bottom for chip rack
-  min-height: 260px;
+// Add box button in carousel
+.add-box-btn {
+  background: rgba(0, 0, 0, 0.3) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
 }
 
 .box-position {
@@ -610,11 +581,12 @@
   background: rgba(0, 0, 0, 0.25);
   border: 3px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
-  padding: 12px;
-  min-width: 200px;
+  padding: 10px;
+  min-width: 140px;
+  max-width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   transition: all 0.3s ease;
   position: relative;
 
@@ -762,10 +734,6 @@
     }
   }
 
-  &.split-hand {
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-  }
-
   &.result-win {
     background: rgba(76, 175, 80, 0.3);
     border: 2px solid #4caf50;
@@ -801,15 +769,6 @@
     border-radius: 10px;
     font-weight: bold;
     font-size: 0.9rem;
-  }
-
-  .split-badge {
-    background: rgba(103, 58, 183, 0.8);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    text-transform: uppercase;
   }
 }
 
@@ -1129,25 +1088,31 @@
 }
 
 // Responsive adjustments
+// ============================================================================
+// Tablet breakpoint (768px and below)
+// ============================================================================
 @media (max-width: 768px) {
   .play-container {
     padding: 8px;
+    gap: 8px;
+    min-height: calc(100vh - 64px);
+    min-height: calc(100dvh - 64px);
   }
 
   .game-table {
-    border-radius: 30% 30% 40% 40% / 15% 15% 25% 25%;
-    padding: 16px 16px 100px; // Extra padding at bottom for chip rack
-    min-height: 500px;
+    border-radius: 30% 30% 40% 40% / 12% 12% 20% 20%;
+    padding: 16px 12px 80px;
+    min-height: 380px;
+    border-width: 3px;
   }
 
   .dealer-section {
-    padding-top: 60px; // Less padding on mobile
+    padding-top: 50px;
   }
 
   .player-boxes-area {
-    gap: 12px;
-    flex-wrap: wrap;
-    padding-bottom: 80px; // Space for chip rack
+    gap: 10px;
+    padding-bottom: 70px;
   }
 
   .box-position {
@@ -1157,33 +1122,34 @@
   }
 
   .player-box {
-    min-width: 160px;
-    padding: 10px;
+    min-width: 130px;
+    padding: 8px;
+    gap: 8px;
   }
 
   .card {
-    width: 56px;
-    height: 78px;
+    width: 52px;
+    height: 73px;
 
     .card-content {
       .card-rank {
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
       .card-suit {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
       }
     }
 
     &.small {
-      width: 48px;
-      height: 67px;
+      width: 44px;
+      height: 62px;
 
       .card-content {
         .card-rank {
-          font-size: 0.9rem;
+          font-size: 0.85rem;
         }
         .card-suit {
-          font-size: 1.2rem;
+          font-size: 1.1rem;
         }
       }
     }
@@ -1191,53 +1157,457 @@
 
   // Chip rack responsive
   .chip-rack {
-    padding: 10px 14px;
+    padding: 8px 12px;
   }
 
   .chips-row {
-    gap: 8px;
+    gap: 6px;
 
     .chip-btn {
-      width: 48px;
-      height: 48px;
-      font-size: 0.75rem;
+      width: 44px;
+      height: 44px;
+      font-size: 0.7rem;
       border-width: 3px;
     }
   }
 
-  // Hide table accessories on small screens or make them smaller
+  // Table accessories
   .table-accessories {
-    padding: 0 20px;
-    top: 10px;
+    padding: 0 16px;
+    top: 8px;
   }
 
   .shoe {
-    width: 60px;
-    height: 45px;
+    width: 55px;
+    height: 42px;
   }
 
   .discard-tray {
-    width: 50px;
-    height: 40px;
+    width: 45px;
+    height: 36px;
   }
 
   .shoe-info, .discard-info {
     .cards-remaining, .cards-count {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
     .cards-label {
-      font-size: 0.55rem;
+      font-size: 0.5rem;
     }
   }
 
   .shuffle-indicator {
-    font-size: 0.75rem;
-    padding: 6px 12px;
+    font-size: 0.7rem;
+    padding: 5px 10px;
 
     mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  // Game message
+  .game-message {
+    font-size: 1.1rem;
+    padding: 8px;
+    min-height: 32px;
+  }
+
+  // Control buttons
+  .control-btn {
+    min-width: 80px;
+    height: 40px;
+    font-size: 0.85rem;
+  }
+
+  .action-buttons {
+    gap: 8px;
+  }
+}
+
+// ============================================================================
+// Mobile breakpoint (480px and below)
+// ============================================================================
+@media (max-width: 480px) {
+  .play-container {
+    padding: 2px;
+    gap: 2px;
+    min-height: calc(100vh - 56px);
+    min-height: calc(100dvh - 56px);
+    height: calc(100vh - 56px);
+    height: calc(100dvh - 56px);
+    overflow: hidden;
+  }
+
+  .game-table {
+    border-radius: 15% 15% 20% 20% / 5% 5% 10% 10%;
+    padding: 8px 6px 50px;
+    min-height: auto;
+    flex: 1;
+    border-width: 2px;
+  }
+
+  .dealer-section {
+    padding-top: 30px;
+  }
+
+  // Carousel adjustments for mobile
+  .player-boxes-carousel {
+    padding: 0 2px;
+    gap: 8px;
+
+    .carousel-stage {
+      gap: 2px;
+    }
+
+    .carousel-nav {
+      width: 32px;
+      height: 32px;
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    .carousel-box-area {
+      max-width: 180px;
+      min-height: 100px;
+    }
+
+    .carousel-indicator {
+      gap: 12px;
+      padding: 6px 12px;
+    }
+
+    .indicator-dot {
+      width: 32px;
+      height: 32px;
+
+      .hand-value {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .player-box {
+    min-width: 140px;
+    max-width: 180px;
+    padding: 6px;
+    gap: 4px;
+    border-width: 2px;
+    border-radius: 10px;
+  }
+
+  .box-bet-content {
+    gap: 4px;
+    min-height: 50px;
+  }
+
+  .display-chip {
+    width: 26px;
+    height: 26px;
+    font-size: 0.5rem;
+    border-width: 2px;
+  }
+
+  .box-total-bet {
+    font-size: 0.9rem;
+  }
+
+  .card {
+    width: 38px;
+    height: 53px;
+
+    .card-content {
+      .card-rank {
+        font-size: 0.75rem;
+      }
+      .card-suit {
+        font-size: 1rem;
+      }
+    }
+
+    &.small {
+      width: 32px;
+      height: 45px;
+
+      .card-content {
+        .card-rank {
+          font-size: 0.65rem;
+        }
+        .card-suit {
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+
+  // Chip rack - ultra compact
+  .chip-rack-area {
+    bottom: 4px;
+  }
+
+  .chip-rack {
+    padding: 4px 8px;
+    border-radius: 12px;
+  }
+
+  .chips-row {
+    gap: 3px;
+
+    .chip-btn {
+      width: 34px;
+      height: 34px;
+      font-size: 0.55rem;
+      border-width: 2px;
+
+      &::before {
+        inset: 2px;
+        border-width: 1px;
+      }
+    }
+  }
+
+  // Table accessories - minimal
+  .table-accessories {
+    padding: 0 6px;
+    top: 2px;
+  }
+
+  .shoe {
+    width: 40px;
+    height: 30px;
+  }
+
+  .discard-tray {
+    width: 35px;
+    height: 26px;
+  }
+
+  .shoe-info, .discard-info {
+    gap: 0;
+    
+    .cards-remaining, .cards-count {
+      font-size: 0.6rem;
+    }
+    .cards-label {
+      display: none; // Hide labels on mobile
+    }
+  }
+
+  .shuffle-indicator {
+    font-size: 0.55rem;
+    padding: 3px 6px;
+    border-radius: 10px;
+
+    mat-icon {
+      font-size: 10px;
+      width: 10px;
+      height: 10px;
+    }
+  }
+
+  // Game message - minimal
+  .game-message {
+    font-size: 0.85rem;
+    padding: 4px;
+    min-height: 22px;
+  }
+
+  // Game controls - compact
+  .game-controls {
+    min-height: 40px;
+    height: 40px;
+    padding: 4px 8px;
+  }
+
+  .control-btn {
+    min-width: 60px;
+    height: 32px;
+    font-size: 0.7rem;
+    padding: 0 8px;
+  }
+
+  .action-buttons {
+    gap: 4px;
+  }
+
+  .betting-section {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .total-bet {
+      font-size: 0.75rem;
+
+      strong {
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  // Insurance section
+  .insurance-section {
+    flex-direction: column;
+    gap: 4px;
+
+    .insurance-prompt {
+      font-size: 0.7rem;
+      gap: 3px;
+
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    .insurance-buttons {
+      gap: 6px;
+    }
+  }
+
+  // Add box button - smaller
+  .add-box-btn {
+    width: 50px !important;
+    height: 50px !important;
+    border-width: 2px !important;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  // Hand container adjustments
+  .hand-container {
+    padding: 4px;
+    gap: 2px;
+    border-radius: 6px;
+  }
+
+  .hand-info {
+    gap: 3px;
+
+    .hand-value-badge {
+      padding: 1px 5px;
+      font-size: 0.65rem;
+    }
+  }
+
+  .bet-display {
+    gap: 3px;
+
+    .bet-chip {
+      padding: 1px 6px;
+      font-size: 0.6rem;
+    }
+
+    .result-badge {
+      padding: 1px 4px;
+      font-size: 0.55rem;
+    }
+  }
+
+  // Cards row
+  .cards-row {
+    gap: 2px;
+  }
+}
+
+// ============================================================================
+// Extra small screens (360px and below)
+// ============================================================================
+@media (max-width: 360px) {
+  .play-container {
+    padding: 1px;
+    gap: 1px;
+  }
+
+  .game-table {
+    padding: 6px 4px 45px;
+    border-radius: 10% 10% 15% 15% / 3% 3% 8% 8%;
+  }
+
+  .dealer-section {
+    padding-top: 25px;
+  }
+
+  .player-boxes-carousel {
+    min-height: 100px;
+    padding-bottom: 40px;
+
+    .carousel-nav {
+      width: 28px;
+      height: 28px;
+
+      mat-icon {
+        font-size: 18px;
+      }
+    }
+
+    .carousel-content {
+      max-width: 150px;
+    }
+  }
+
+  .player-box {
+    min-width: 120px;
+    max-width: 150px;
+    padding: 4px;
+  }
+
+  .card {
+    width: 32px;
+    height: 45px;
+
+    .card-content {
+      .card-rank {
+        font-size: 0.65rem;
+      }
+      .card-suit {
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .chips-row .chip-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.5rem;
+  }
+
+  .game-controls {
+    min-height: 36px;
+    height: 36px;
+    padding: 2px 4px;
+  }
+
+  .control-btn {
+    min-width: 50px;
+    height: 28px;
+    font-size: 0.6rem;
+    padding: 0 6px;
+  }
+
+  .game-message {
+    font-size: 0.75rem;
+    padding: 2px;
+    min-height: 18px;
+  }
+
+  .add-box-btn {
+    width: 44px !important;
+    height: 44px !important;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
     }
   }
 }

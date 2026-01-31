@@ -162,3 +162,115 @@
     color: #ffeb3b;
   }
 }
+
+// ============================================================================
+// Mobile Responsive
+// ============================================================================
+
+@media (max-width: 600px) {
+  .dealer-section {
+    padding: 12px 8px 16px;
+  }
+
+  .dealer-area {
+    gap: 8px;
+  }
+
+  .hand-label {
+    gap: 8px;
+  }
+
+  .dealer-label {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .hand-value-container {
+    padding: 3px 10px;
+  }
+
+  .hand-value {
+    font-size: 14px;
+  }
+
+  .blackjack-badge {
+    font-size: 12px;
+  }
+
+  .cards-row {
+    gap: 6px;
+    min-height: 85px;
+  }
+
+  .dealer-cards app-playing-card {
+    --card-width: 55px;
+    --card-height: 78px;
+
+    &:not(:first-child) {
+      margin-left: -12px;
+    }
+  }
+
+  .empty-hand-placeholder {
+    min-width: 120px;
+    min-height: 75px;
+  }
+
+  .placeholder-text {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .dealer-section {
+    padding: 4px 4px 8px;
+  }
+
+  .dealer-area {
+    gap: 4px;
+  }
+
+  .hand-label {
+    gap: 4px;
+  }
+
+  .dealer-label {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+
+  .hand-value-container {
+    padding: 2px 8px;
+  }
+
+  .hand-value {
+    font-size: 11px;
+  }
+
+  .blackjack-badge {
+    font-size: 10px;
+  }
+
+  .cards-row {
+    min-height: 55px;
+    gap: 4px;
+  }
+
+  .dealer-cards app-playing-card {
+    --card-width: 38px;
+    --card-height: 53px;
+
+    &:not(:first-child) {
+      margin-left: -8px;
+    }
+  }
+
+  .empty-hand-placeholder {
+    min-width: 80px;
+    min-height: 50px;
+  }
+
+  .placeholder-text {
+    font-size: 8px;
+  }
+}

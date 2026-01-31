@@ -312,14 +312,6 @@
 // Split Animations
 // ============================================================================
 
-.card-split-left {
-  animation: splitMoveLeft 300ms ease-out forwards;
-}
-
-.card-split-right {
-  animation: splitMoveRight 300ms ease-out forwards;
-}
-
 @keyframes splitMoveLeft {
   from {
     transform: translateX(0);
@@ -382,5 +374,160 @@
     box-shadow: 
       0 0 30px rgba(102, 187, 106, 0.7),
       var(--card-shadow);
+  }
+}
+
+// ============================================================================
+// Mobile Responsive - Size variants for smaller screens
+// ============================================================================
+
+@media (max-width: 600px) {
+  :host {
+    --card-width: 55px;
+    --card-height: 78px;
+    --card-radius: 6px;
+  }
+
+  :host(.card-small) {
+    --card-width: 42px;
+    --card-height: 60px;
+    --card-radius: 5px;
+  }
+
+  :host(.card-medium) {
+    --card-width: 55px;
+    --card-height: 78px;
+    --card-radius: 6px;
+  }
+
+  :host(.card-large) {
+    --card-width: 70px;
+    --card-height: 100px;
+    --card-radius: 8px;
+  }
+
+  .card-face {
+    padding: 4px;
+  }
+
+  // Reduce enter animation distance on mobile
+  @keyframes cardSlideIn {
+    0% {
+      opacity: 0;
+      transform: 
+        translateX(-200px) 
+        translateY(-60px)
+        rotate(-10deg)
+        scale(0.7);
+      filter: blur(1px);
+    }
+    30% {
+      opacity: 1;
+      filter: blur(0);
+    }
+    70% {
+      transform: 
+        translateX(5px) 
+        translateY(3px)
+        rotate(1deg)
+        scale(1.01);
+    }
+    100% {
+      opacity: 1;
+      transform: 
+        translateX(0) 
+        translateY(0)
+        rotate(0deg)
+        scale(1);
+    }
+  }
+
+  // Reduce split animation distance
+  @keyframes splitMoveLeft {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-20px);
+    }
+  }
+
+  @keyframes splitMoveRight {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(20px);
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  :host {
+    --card-width: 38px;
+    --card-height: 53px;
+    --card-radius: 4px;
+    --deal-duration: 300ms;
+    --flip-duration: 350ms;
+  }
+
+  :host(.card-small) {
+    --card-width: 32px;
+    --card-height: 45px;
+    --card-radius: 3px;
+  }
+
+  :host(.card-medium) {
+    --card-width: 38px;
+    --card-height: 53px;
+    --card-radius: 4px;
+  }
+
+  :host(.card-large) {
+    --card-width: 48px;
+    --card-height: 67px;
+    --card-radius: 5px;
+  }
+
+  .card-face {
+    padding: 2px;
+  }
+
+  // Disable hover effect on touch devices
+  :host(:not(.is-face-down)) .playing-card:hover {
+    transform: none;
+  }
+
+  // Even shorter animation distance
+  @keyframes cardSlideIn {
+    0% {
+      opacity: 0;
+      transform: 
+        translateX(-100px) 
+        translateY(-30px)
+        rotate(-5deg)
+        scale(0.8);
+    }
+    30% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      transform: 
+        translateX(0) 
+        translateY(0)
+        rotate(0deg)
+        scale(1);
+    }
+  }
+
+  @keyframes splitMoveLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-15px); }
+  }
+
+  @keyframes splitMoveRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(15px); }
   }
 }

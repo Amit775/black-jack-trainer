@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  box-sizing: border-box;
 }
 
 .welcome-card {
@@ -42,6 +43,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 24px 0;
+    flex-wrap: wrap;
+    gap: 8px;
     
     .balance-label {
       font-size: 1.2rem;
@@ -66,6 +69,7 @@
 
     @media (max-width: 600px) {
       grid-template-columns: 1fr;
+      gap: 24px;
     }
 
     .action-group {
@@ -86,6 +90,7 @@
       .withdraw-buttons {
         display: flex;
         gap: 8px;
+        flex-wrap: wrap;
       }
     }
   }
@@ -97,6 +102,53 @@
   align-items: center;
   gap: 16px;
   padding: 24px 0;
+
+// Mobile responsiveness
+@media (max-width: 480px) {
+  .home-container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .welcome-card {
+    .welcome-text {
+      font-size: 1rem;
+    }
+  }
+
+  .balance-card {
+    .current-balance {
+      padding: 16px 0;
+      flex-direction: column;
+      align-items: flex-start;
+
+      .balance-label {
+        font-size: 1rem;
+      }
+
+      .balance-amount {
+        font-size: 2rem;
+      }
+    }
+
+    mat-divider {
+      margin-bottom: 16px;
+    }
+
+    .balance-actions {
+      gap: 16px;
+
+      .action-group {
+        gap: 8px;
+      }
+    }
+  }
+
+  .start-game-section {
+    padding: 16px 0;
+    gap: 12px;
+  }
+}
 
   .no-balance-warning {
     color: #ff9800;

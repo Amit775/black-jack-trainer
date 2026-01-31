@@ -1,19 +1,23 @@
 :host {
   display: block;
   min-height: 100vh;
+  min-height: 100dvh; // Dynamic viewport height for mobile browsers
   background: #1a1a2e;
+  overflow-x: hidden;
 }
 
 mat-toolbar {
   position: sticky;
   top: 0;
   z-index: 1000;
+  padding: 0 8px;
 
   .app-title {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 500;
+    font-size: 1rem;
 
     mat-icon {
       color: #4caf50;
@@ -26,12 +30,14 @@ mat-toolbar {
 
   .nav-links {
     display: flex;
-    gap: 8px;
+    gap: 4px;
 
     a {
       display: flex;
       align-items: center;
       gap: 4px;
+      padding: 0 12px;
+      min-width: auto;
 
       &.active {
         background: rgba(255, 255, 255, 0.1);
@@ -42,4 +48,51 @@ mat-toolbar {
 
 .main-content {
   min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px);
+}
+
+// Mobile responsive adjustments
+@media (max-width: 600px) {
+  mat-toolbar {
+    padding: 0 4px;
+    min-height: 56px;
+
+    .app-title {
+      font-size: 0.9rem;
+      gap: 4px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .nav-links {
+      gap: 0;
+
+      a {
+        padding: 0 8px;
+        font-size: 0.8rem;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+
+        // Hide text on very small screens, show only icons
+        @media (max-width: 400px) {
+          span:not(.mat-icon) {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+
+  .main-content {
+    min-height: calc(100vh - 56px);
+    min-height: calc(100dvh - 56px);
+  }
 }

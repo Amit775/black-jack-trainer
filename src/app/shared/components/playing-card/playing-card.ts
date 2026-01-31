@@ -90,8 +90,7 @@ export class PlayingCardComponent implements AfterViewInit, OnDestroy {
       'card-entering': c.animationState === 'entering',
       'card-dealt': c.animationState === 'dealt' || c.animationState === 'revealed',
       'card-revealing': c.animationState === 'revealing',
-      'card-split-left': c.animationState === 'split-left',
-      'card-split-right': c.animationState === 'split-right',
+      // Split animations removed - split hands now shown as separate carousel items
     };
   });
 
