@@ -35,33 +35,39 @@
       [indicators]="carouselIndicators()"
       (activeIndexChange)="onCarouselIndexChange($event)"
     >
-      @for (item of carouselItems(); track item.position + '-' + item.handIndex) {
+      @for (item of carouselItems(); track item.boxId + '-' + item.handIndex) {
         <ng-template carouselItem>
-          @if (getBox(item.position); as box) {
+          @if (getBox(item.boxId); as box) {
             @if (box.isActive) {
               <app-player-box
                 [box]="box"
+                [boxId]="box.id"
                 [gamePhase]="store.phase()"
-                [isActiveBox]="isActiveBox(item.position)"
-                [isInsuranceBox]="isInsuranceBox(item.position)"
+                [isActiveBox]="isActiveBox(item.boxId)"
+                [isInsuranceBox]="isInsuranceBox(item.boxId)"
                 [isSelectedBox]="true"
                 [activeHandIndex]="item.handIndex"
                 [showOnlyHandIndex]="item.isSplitHand ? item.handIndex : -1"
+                [canRemove]="canRemoveBox()"
                 (boxSelected)="onBoxSelected($event)"
                 (chipRemoved)="onChipRemoved($event)"
                 (boxRemoved)="onBoxRemoved($event)"
                 (cardAnimationComplete)="onCardAnimationComplete($event)"
               />
-            } @else if (store.phase() === 'betting') {
-              <button
-                class="add-box-btn"
-                mat-fab
-                (click)="onToggleBox(item.position)"
-              >
-                <mat-icon>add</mat-icon>
-              </button>
             }
           }
+        </ng-template>
+      }
+      <!-- Add Box button as last carousel item during betting -->
+      @if (store.phase() === 'betting') {
+        <ng-template carouselItem>
+          <button
+            class="add-box-btn"
+            mat-fab
+            (click)="onAddBox()"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
         </ng-template>
       }
     </app-carousel>

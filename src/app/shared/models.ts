@@ -9,7 +9,6 @@
 
 export const SUITS = ['hearts', 'diamonds', 'clubs', 'spades'] as const;
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'] as const;
-export const BOX_POSITIONS = ['left', 'center', 'right'] as const;
 export const CHIP_DENOMINATIONS = [5, 10, 25, 50, 100] as const;
 
 // ============================================================================
@@ -18,7 +17,6 @@ export const CHIP_DENOMINATIONS = [5, 10, 25, 50, 100] as const;
 
 export type Suit = (typeof SUITS)[number];
 export type Rank = (typeof RANKS)[number];
-export type BoxPosition = (typeof BOX_POSITIONS)[number];
 export type ChipDenomination = (typeof CHIP_DENOMINATIONS)[number];
 
 export type CardAnimationState =
@@ -67,7 +65,7 @@ export interface Hand {
 // ============================================================================
 
 export interface Box {
-  position: BoxPosition;
+  id: string;
   hands: Hand[];
   activeHandIndex: number;
   bet: number;
@@ -171,17 +169,30 @@ export const createEmptyHand = (bet: number = 0): Hand => ({
   isBusted: false,
 });
 
+let boxIdCounter = 0;
+
+/**
+ * Generate a unique box ID
+ */
+export const generateBoxId = (): string => {
+  return `box-${Date.now()}-${++boxIdCounter}`;
+};
+
+/**
+ * Create an initial array of boxes with one active box
+ */
 export const createInitialBoxes = (): Box[] => [
-  createEmptyBox('left'),
   {
-    ...createEmptyBox('center'),
+    ...createEmptyBox(),
     isActive: true,
   },
-  createEmptyBox('right'),
 ];
 
-export const createEmptyBox = (position: BoxPosition, bet: number = 0): Box => ({
-  position,
+/**
+ * Create an empty box with a unique ID
+ */
+export const createEmptyBox = (bet: number = 0): Box => ({
+  id: generateBoxId(),
   hands: [],
   activeHandIndex: 0,
   bet,

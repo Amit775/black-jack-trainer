@@ -9,7 +9,6 @@ import {
 } from '@ngrx/signals';
 import {
   Box,
-  BoxPosition,
   Card,
   GamePhase,
   GameResult,
@@ -18,6 +17,7 @@ import {
   ShoeState,
   createEmptyHand,
   createInitialBoxes,
+  createEmptyBox,
 } from '../models';
 import { dealCardFromShoe, dealFaceDownCard } from './shoe.feature';
 import {
@@ -40,7 +40,7 @@ import {
 
 const INITIAL_GAME_STATE: GameSliceState = {
   boxes: createInitialBoxes(),
-  activeBoxIndex: 1,
+  activeBoxIndex: 0,
   insuranceBoxIndex: -1,
   dealerHand: createEmptyHand(),
   phase: 'betting',
@@ -418,7 +418,7 @@ export function withGame() {
           patchState(store, {
             boxes,
             insuranceBoxIndex: nextIndex,
-            message: `Insurance for ${nextBox.position} box? (Cost: $${(nextBox.bet / 2).toFixed(2)})`,
+            message: `Insurance for box ${nextIndex + 1}? (Cost: $${(nextBox.bet / 2).toFixed(2)})`,
           });
         } else {
           patchState(store, {
@@ -500,38 +500,52 @@ export function withGame() {
 
       return {
         // Betting Phase
-        toggleBox(position: BoxPosition): void {
-          if (store.phase() !== 'betting') return;
+        /**
+         * Add a new box to the right of existing boxes
+         */
+        addBox(): string | null {
+          if (store.phase() !== 'betting') return null;
 
-          updateBoxes((boxes) =>
-            boxes.map((box) => {
-              if (box.position === position) {
-                if (box.isActive && boxes.filter((b) => b.isActive).length <= 1) {
-                  return box;
-                }
-                return { ...box, isActive: !box.isActive, bet: box.isActive ? 0 : box.bet };
-              }
-              return box;
-            }),
-          );
+          const newBox = createEmptyBox();
+          newBox.isActive = true;
+          const boxes = [...store.boxes(), newBox];
+          patchState(store, { boxes });
+          return newBox.id;
         },
 
-        setBoxBet(position: BoxPosition, amount: number): void {
+        /**
+         * Remove a box by ID (cannot remove if it's the only active box)
+         */
+        removeBox(boxId: string): void {
+          if (store.phase() !== 'betting') return;
+
+          const boxes = store.boxes();
+          const activeCount = boxes.filter((b) => b.isActive).length;
+          if (activeCount <= 1) return;
+
+          const boxIndex = boxes.findIndex((b) => b.id === boxId);
+          if (boxIndex === -1) return;
+
+          const updatedBoxes = boxes.filter((b) => b.id !== boxId);
+          patchState(store, { boxes: updatedBoxes });
+        },
+
+        setBoxBet(boxId: string, amount: number): void {
           if (store.phase() !== 'betting') return;
           if (amount < 0) return;
 
-          const box = store.boxes().find((b) => b.position === position);
+          const box = store.boxes().find((b) => b.id === boxId);
           if (!box || !box.isActive) return;
 
           const otherBoxesBet = store
             .boxes()
-            .filter((b) => b.isActive && b.position !== position)
+            .filter((b) => b.isActive && b.id !== boxId)
             .reduce((sum, b) => sum + b.bet, 0);
 
           if (otherBoxesBet + amount > store.balance()) return;
 
           updateBoxes((boxes) =>
-            boxes.map((b) => (b.position === position ? { ...b, bet: amount } : b)),
+            boxes.map((b) => (b.id === boxId ? { ...b, bet: amount } : b)),
           );
         },
 
@@ -751,11 +765,13 @@ export function withGame() {
             discardTray = [];
           }
 
+          // Preserve the existing box structure, just reset hands and resolution state
           const previousBoxes = store.boxes();
-          const boxes = createInitialBoxes().map((box, index) => ({
-            ...box,
-            isActive: previousBoxes[index].isActive,
-            bet: previousBoxes[index].bet,
+          const boxes = previousBoxes.map((box) => ({
+            ...createEmptyBox(box.bet),
+            id: box.id, // Preserve box ID
+            isActive: box.isActive,
+            bet: box.bet,
           }));
 
           patchState(store, {
@@ -763,7 +779,7 @@ export function withGame() {
             shoeState,
             discardTray,
             boxes,
-            activeBoxIndex: 1,
+            activeBoxIndex: 0,
             insuranceBoxIndex: -1,
             dealerHand: createEmptyHand(),
             phase: 'betting',
@@ -998,7 +1014,7 @@ export function withGame() {
             activeBoxIndex: firstActiveIndex,
             insuranceBoxIndex: firstInsuranceBoxIndex,
             phase: 'insurance',
-            message: `Insurance for ${firstBox.position} box? (Cost: $${(firstBox.bet / 2).toFixed(2)})`,
+            message: `Insurance for box ${firstInsuranceBoxIndex + 1}? (Cost: $${(firstBox.bet / 2).toFixed(2)})`,
           });
         } else {
           patchState(store, {
