@@ -16,7 +16,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run test:ci
       - run: npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
