@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-width: 400px;
+  min-width: min(400px, 80vw);
   padding: 8px 0;
+  box-sizing: border-box;
 
   mat-form-field {
     width: 100%;
@@ -17,5 +18,17 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 480px) {
+  .settings-form {
+    min-width: auto;
+    gap: 12px;
+
+    .toggle-options {
+      gap: 12px;
+    }
   }
 }

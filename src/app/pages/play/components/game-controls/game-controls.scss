@@ -2,8 +2,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80px;
-  padding: 16px;
+  min-height: 70px;
+  padding: 12px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
@@ -11,10 +11,12 @@
 .betting-section {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
 
   .total-bet {
-    font-size: 18px;
+    font-size: 16px;
     color: #ffd54f;
   }
 }
@@ -23,13 +25,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 
   .insurance-prompt {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 16px;
+    font-size: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
 
     mat-icon {
       color: #ffd54f;
@@ -47,13 +52,13 @@
 
   .insurance-buttons {
     display: flex;
-    gap: 16px;
+    gap: 12px;
   }
 }
 
 .action-buttons {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -64,10 +69,11 @@
 }
 
 .control-btn {
-  min-width: 100px;
+  min-width: 90px;
+  touch-action: manipulation;
   
   mat-icon {
-    margin-right: 8px;
+    margin-right: 6px;
   }
 }
 
@@ -76,7 +82,7 @@
   align-items: center;
   gap: 8px;
   color: #ffd54f;
-  font-size: 18px;
+  font-size: 16px;
 
   .spinning {
     animation: spin 1s linear infinite;
@@ -89,5 +95,77 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+// Mobile responsive
+@media (max-width: 600px) {
+  .game-controls {
+    min-height: 60px;
+    padding: 10px 8px;
+  }
+
+  .betting-section {
+    gap: 12px;
+
+    .total-bet {
+      font-size: 14px;
+    }
+  }
+
+  .insurance-section {
+    gap: 8px;
+
+    .insurance-prompt {
+      font-size: 13px;
+      gap: 6px;
+    }
+
+    .insurance-buttons {
+      gap: 8px;
+    }
+  }
+
+  .action-buttons {
+    gap: 8px;
+  }
+
+  .control-btn {
+    min-width: 75px;
+    padding: 0 12px;
+    font-size: 13px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
+  }
+
+  .dealer-turn-indicator {
+    font-size: 14px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 400px) {
+  .game-controls {
+    min-height: 50px;
+    padding: 8px 6px;
+  }
+
+  .control-btn {
+    min-width: 65px;
+    font-size: 12px;
+    padding: 0 8px;
+
+    mat-icon {
+      display: none; // Hide icons on very small screens
+    }
+  }
+
+  .insurance-section .insurance-prompt {
+    font-size: 12px;
   }
 }

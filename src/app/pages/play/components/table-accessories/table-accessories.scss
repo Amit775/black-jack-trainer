@@ -142,3 +142,83 @@
     transform: translate(-50%, -50%) scale(1.02);
   }
 }
+
+// Mobile responsive
+@media (max-width: 600px) {
+  .table-accessories {
+    padding: 12px 16px;
+  }
+
+  .shoe-container,
+  .discard-tray-container {
+    gap: 4px;
+  }
+
+  .shoe {
+    width: 60px;
+    height: 45px;
+  }
+
+  .discard-tray {
+    width: 55px;
+    height: 38px;
+  }
+
+  .shoe-info,
+  .discard-info {
+    .cards-remaining,
+    .cards-count {
+      font-size: 12px;
+    }
+
+    .cards-label {
+      font-size: 8px;
+    }
+  }
+
+  .shuffle-indicator {
+    padding: 6px 12px;
+    font-size: 10px;
+    gap: 4px;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .table-accessories {
+    padding: 8px 10px;
+  }
+
+  .shoe {
+    width: 48px;
+    height: 36px;
+  }
+
+  .discard-tray {
+    width: 44px;
+    height: 32px;
+  }
+
+  .shoe-info,
+  .discard-info {
+    .cards-remaining,
+    .cards-count {
+      font-size: 10px;
+    }
+
+    .cards-label {
+      font-size: 7px;
+    }
+  }
+
+  .shuffle-indicator {
+    padding: 4px 8px;
+    font-size: 9px;
+    border-radius: 12px;
+  }
+}
