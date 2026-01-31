@@ -29,61 +29,61 @@
     </div>
   } @else {
     <!-- Playing phase: show hands -->
-    <div class="box-hands">
-      @for (hand of hands(); track $index; let handIdx = $index) {
+    <div class="box-hands" [class.single-hand-view]="showOnlyHandIndex() >= 0">
+      @for (item of displayedHands(); track item.originalIndex) {
         <div
           class="hand-container"
-          [class.active-hand]="isActiveHand(handIdx)"
-          [class.split-hand]="hand.isSplit"
-          [class.result-win]="hand.result === 'win' || hand.result === 'blackjack'"
-          [class.result-lose]="hand.result === 'lose'"
-          [class.result-push]="hand.result === 'push'"
-          [class.busted]="isBustedHand(hand)"
+          [class.active-hand]="isActiveHand(item.originalIndex)"
+          [class.split-hand]="item.hand.isSplit"
+          [class.result-win]="item.hand.result === 'win' || item.hand.result === 'blackjack'"
+          [class.result-lose]="item.hand.result === 'lose'"
+          [class.result-push]="item.hand.result === 'push'"
+          [class.busted]="isBustedHand(item.hand)"
         >
           <!-- Hand Info Header -->
           <div class="hand-info">
-            @if (hand.cards.length > 0) {
+            @if (item.hand.cards.length > 0) {
               <div
                 class="hand-value-badge"
-                [class.blackjack]="isBlackjack(hand)"
-                [class.busted]="isBustedHand(hand)"
+                [class.blackjack]="isBlackjack(item.hand)"
+                [class.busted]="isBustedHand(item.hand)"
               >
-                @if (isBlackjack(hand)) {
+                @if (isBlackjack(item.hand)) {
                   <span class="bj-text">BJ!</span>
-                } @else if (isBustedHand(hand)) {
+                } @else if (isBustedHand(item.hand)) {
                   <span class="bust-text">BUST</span>
                 } @else {
-                  <span>{{ getHandValue(hand) }}</span>
+                  <span>{{ getHandValue(item.hand) }}</span>
                 }
               </div>
             }
-            @if (hand.isSplit) {
-              <span class="split-badge">Split {{ handIdx + 1 }}</span>
+            @if (item.hand.isSplit && showOnlyHandIndex() < 0) {
+              <span class="split-badge">Split {{ item.originalIndex + 1 }}</span>
             }
-            @if (hand.isDoubledDown) {
+            @if (item.hand.isDoubledDown) {
               <span class="double-badge">2x</span>
             }
           </div>
 
           <!-- Cards Row with Animated Cards -->
-          <div class="cards-row" [class.many-cards]="hand.cards.length > 4">
-            @for (card of hand.cards; track card.id; let cardIdx = $index) {
+          <div class="cards-row" [class.many-cards]="item.hand.cards.length > 4">
+            @for (card of item.hand.cards; track card.id; let cardIdx = $index) {
               <app-playing-card
                 [card]="card"
                 [size]="'small'"
                 (enterComplete)="onCardEnterComplete($event)"
                 (revealComplete)="onCardRevealComplete($event)"
-                [class.new-card]="cardIdx === hand.cards.length - 1 && isActiveHand(handIdx)"
+                [class.new-card]="cardIdx === item.hand.cards.length - 1 && isActiveHand(item.originalIndex)"
               />
             }
           </div>
 
           <!-- Bet Display -->
           <div class="bet-display">
-            <span class="bet-chip" [class.doubled]="hand.isDoubledDown"> ${{ hand.bet }} </span>
-            @if (hand.result) {
-              <span class="result-badge" [class]="hand.result">
-                {{ getResultText(hand.result) }}
+            <span class="bet-chip" [class.doubled]="item.hand.isDoubledDown"> ${{ item.hand.bet }} </span>
+            @if (item.hand.result) {
+              <span class="result-badge" [class]="item.hand.result">
+                {{ getResultText(item.hand.result) }}
               </span>
             }
           </div>

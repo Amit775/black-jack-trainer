@@ -72,61 +72,71 @@
 
     <!-- Player Boxes Area - Mobile Carousel -->
     <div class="player-boxes-carousel mobile-only">
-      <button
-        class="carousel-nav prev"
-        mat-icon-button
-        (click)="navigateBox('prev')"
-        [disabled]="!canNavigate('prev')"
-      >
-        <mat-icon>chevron_left</mat-icon>
-      </button>
+      <div class="carousel-stage">
+        <button
+          class="carousel-nav prev"
+          mat-icon-button
+          (click)="navigateCarousel('prev')"
+          [disabled]="!canNavigateCarousel('prev')"
+        >
+          <mat-icon>chevron_left</mat-icon>
+        </button>
 
-      <div class="carousel-content">
-        <div class="carousel-indicator">
-          @for (pos of boxPositions; track pos; let i = $index) {
-            <span 
-              class="dot" 
-              [class.active]="i === mobileBoxIndex()"
-              (click)="mobileBoxIndex.set(i); selectedBoxPosition = boxPositions[i]"
-            ></span>
+        <div class="carousel-box-area">
+          @if (currentCarouselItem; as item) {
+            @if (getBox(item.position); as box) {
+              @if (box.isActive) {
+                <app-player-box
+                  [box]="box"
+                  [gamePhase]="store.phase()"
+                  [isActiveBox]="isActiveBox(item.position)"
+                  [isInsuranceBox]="isInsuranceBox(item.position)"
+                  [isSelectedBox]="true"
+                  [activeHandIndex]="item.handIndex"
+                  [showOnlyHandIndex]="item.isSplitHand ? item.handIndex : -1"
+                  (boxSelected)="onBoxSelected($event)"
+                  (chipRemoved)="onChipRemoved($event)"
+                  (boxRemoved)="onBoxRemoved($event)"
+                  (cardAnimationComplete)="onCardAnimationComplete($event)"
+                />
+              } @else if (store.phase() === 'betting') {
+                <button
+                  class="add-box-btn"
+                  mat-fab
+                  (click)="onToggleBox(item.position)"
+                >
+                  <mat-icon>add</mat-icon>
+                </button>
+              }
+            }
           }
         </div>
-        
-        @if (getBox(currentMobilePosition); as box) {
-          <div class="box-label">{{ currentMobilePosition | titlecase }} Box</div>
-          @if (box.isActive) {
-            <app-player-box
-              [box]="box"
-              [gamePhase]="store.phase()"
-              [isActiveBox]="isActiveBox(currentMobilePosition)"
-              [isInsuranceBox]="isInsuranceBox(currentMobilePosition)"
-              [isSelectedBox]="true"
-              [activeHandIndex]="getActiveHandIndex(currentMobilePosition)"
-              (boxSelected)="onBoxSelected($event)"
-              (chipRemoved)="onChipRemoved($event)"
-              (boxRemoved)="onBoxRemoved($event)"
-              (cardAnimationComplete)="onCardAnimationComplete($event)"
-            />
-          } @else if (store.phase() === 'betting') {
-            <button
-              class="add-box-btn"
-              mat-fab
-              (click)="onToggleBox(currentMobilePosition)"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
-          }
-        }
+
+        <button
+          class="carousel-nav next"
+          mat-icon-button
+          (click)="navigateCarousel('next')"
+          [disabled]="!canNavigateCarousel('next')"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
       </div>
 
-      <button
-        class="carousel-nav next"
-        mat-icon-button
-        (click)="navigateBox('next')"
-        [disabled]="!canNavigate('next')"
-      >
-        <mat-icon>chevron_right</mat-icon>
-      </button>
+      <div class="carousel-indicator">
+        @for (item of carouselItems(); track item.position + item.handIndex; let i = $index) {
+          <button
+            class="indicator-dot"
+            [class.active]="i === mobileCarouselIndex()"
+            [class]="getItemIndicatorClass(item)"
+            (click)="selectCarouselItem(i)"
+          >
+            <span class="item-label">{{ item.label }}</span>
+            @if (getItemHandValue(item); as value) {
+              <span class="hand-value">{{ value }}</span>
+            }
+          </button>
+        }
+      </div>
     </div>
 
     <!-- Chip Rack -->

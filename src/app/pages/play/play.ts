@@ -1,4 +1,13 @@
-import { Component, inject, OnInit, computed, ChangeDetectionStrategy, signal, HostListener } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  computed,
+  ChangeDetectionStrategy,
+  signal,
+  HostListener,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +27,16 @@ import {
   type PlayerBoxEvent,
   type ChipRemoveEvent,
 } from './components';
+import { calculateHandValue } from '../../store/utils/card.utils';
+import { Box, Hand, HandResult } from '../../shared/models';
+
+// Represents an item in the mobile carousel (either a box or a specific hand within a split box)
+export interface CarouselItem {
+  position: BoxPosition;
+  handIndex: number; // 0 for non-split, 0 or 1 for split hands
+  isSplitHand: boolean;
+  label: string; // e.g., 'L', 'C', 'R', 'C1', 'C2'
+}
 
 @Component({
   selector: 'app-play',
@@ -47,10 +66,73 @@ export class PlayComponent implements OnInit {
   protected selectedBoxPosition: BoxPosition = 'center';
 
   protected readonly boxPositions: BoxPosition[] = ['left', 'center', 'right'];
-  
+
   // Mobile carousel state
   protected readonly isMobile = signal(false);
-  protected readonly mobileBoxIndex = signal(1); // 0=left, 1=center, 2=right
+  protected readonly mobileCarouselIndex = signal(1); // Index into carouselItems
+
+  // Dynamic carousel items - expands when hands are split
+  protected readonly carouselItems = computed<CarouselItem[]>(() => {
+    const boxes = this.store.boxes();
+    const items: CarouselItem[] = [];
+
+    for (const position of this.boxPositions) {
+      const box = boxes.find((b) => b.position === position);
+
+      if (box?.isActive && box.hands.length > 1) {
+        // Split box - add each hand as separate item
+        for (let i = 0; i < box.hands.length; i++) {
+          items.push({
+            position,
+            handIndex: i,
+            isSplitHand: true,
+            label: `${position.charAt(0).toUpperCase()}${i + 1}`,
+          });
+        }
+      } else {
+        // Regular box or inactive - single item
+        items.push({
+          position,
+          handIndex: 0,
+          isSplitHand: false,
+          label: position.charAt(0).toUpperCase(),
+        });
+      }
+    }
+
+    return items;
+  });
+
+  constructor() {
+    // Sync carousel with active box/hand during gameplay
+    effect(() => {
+      const activeBox = this.store.activeBox();
+      const insuranceBox = this.store.insuranceBox();
+      const phase = this.store.phase();
+      const items = this.carouselItems();
+
+      if (this.isMobile() && items.length > 0) {
+        let targetPosition: BoxPosition | null = null;
+        let targetHandIndex = 0;
+
+        if (phase === 'playing' && activeBox) {
+          targetPosition = activeBox.position;
+          targetHandIndex = activeBox.activeHandIndex;
+        } else if (phase === 'insurance' && insuranceBox) {
+          targetPosition = insuranceBox.position;
+        }
+
+        if (targetPosition) {
+          const index = items.findIndex(
+            (item) => item.position === targetPosition && item.handIndex === targetHandIndex,
+          );
+          if (index !== -1 && index !== this.mobileCarouselIndex()) {
+            this.mobileCarouselIndex.set(index);
+          }
+        }
+      }
+    });
+  }
 
   // Only keep computed signals that add value or combine multiple sources
   protected readonly controlsState = computed<GameControlsState>(() => ({
@@ -78,24 +160,39 @@ export class PlayComponent implements OnInit {
   }
 
   // Mobile carousel navigation
-  protected get currentMobilePosition(): BoxPosition {
-    return this.boxPositions[this.mobileBoxIndex()];
+  protected get currentCarouselItem(): CarouselItem {
+    const items = this.carouselItems();
+    const index = this.mobileCarouselIndex();
+    // Ensure index is within bounds
+    const safeIndex = Math.min(Math.max(0, index), items.length - 1);
+    return items[safeIndex];
   }
 
-  protected navigateBox(direction: 'prev' | 'next'): void {
-    const current = this.mobileBoxIndex();
+  protected navigateCarousel(direction: 'prev' | 'next'): void {
+    const current = this.mobileCarouselIndex();
+    const items = this.carouselItems();
+
     if (direction === 'prev' && current > 0) {
-      this.mobileBoxIndex.set(current - 1);
-      this.selectedBoxPosition = this.boxPositions[current - 1];
-    } else if (direction === 'next' && current < 2) {
-      this.mobileBoxIndex.set(current + 1);
-      this.selectedBoxPosition = this.boxPositions[current + 1];
+      this.mobileCarouselIndex.set(current - 1);
+      this.selectedBoxPosition = items[current - 1].position;
+    } else if (direction === 'next' && current < items.length - 1) {
+      this.mobileCarouselIndex.set(current + 1);
+      this.selectedBoxPosition = items[current + 1].position;
     }
   }
 
-  protected canNavigate(direction: 'prev' | 'next'): boolean {
-    const current = this.mobileBoxIndex();
-    return direction === 'prev' ? current > 0 : current < 2;
+  protected canNavigateCarousel(direction: 'prev' | 'next'): boolean {
+    const current = this.mobileCarouselIndex();
+    const items = this.carouselItems();
+    return direction === 'prev' ? current > 0 : current < items.length - 1;
+  }
+
+  protected selectCarouselItem(index: number): void {
+    const items = this.carouselItems();
+    if (index >= 0 && index < items.length) {
+      this.mobileCarouselIndex.set(index);
+      this.selectedBoxPosition = items[index].position;
+    }
   }
 
   // Box helpers
@@ -111,6 +208,44 @@ export class PlayComponent implements OnInit {
   protected isInsuranceBox(position: BoxPosition): boolean {
     const insuranceBox = this.store.insuranceBox();
     return insuranceBox?.position === position && this.store.phase() === 'insurance';
+  }
+
+  // Carousel indicator helpers
+  protected getItemHandValue(item: CarouselItem): string {
+    const box = this.getBox(item.position);
+    if (!box?.isActive) return '';
+
+    const hand = box.hands[item.handIndex];
+    if (!hand?.cards.length) return '';
+
+    const value = calculateHandValue(hand.cards).value;
+    return value.toString();
+  }
+
+  protected getItemIndicatorClass(item: CarouselItem): string {
+    const box = this.getBox(item.position);
+    const classes: string[] = [];
+
+    if (!box?.isActive) {
+      classes.push('inactive');
+      return classes.join(' ');
+    }
+
+    const hand = box.hands[item.handIndex];
+
+    if (hand?.result) {
+      classes.push(`result-${hand.result}`);
+    } else if (this.isActiveBox(item.position) && box.activeHandIndex === item.handIndex) {
+      classes.push('playing');
+    } else if (hand?.cards.length) {
+      classes.push('has-cards');
+    }
+
+    if (item.isSplitHand) {
+      classes.push('split-hand');
+    }
+
+    return classes.join(' ');
   }
 
   protected isSelectedBox(position: BoxPosition): boolean {

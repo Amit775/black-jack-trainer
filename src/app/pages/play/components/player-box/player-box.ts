@@ -70,6 +70,9 @@ export class PlayerBoxComponent {
   /** Index of the active hand within this box (for split hands) */
   readonly activeHandIndex = input<number>(0);
 
+  /** When >= 0, only show this specific hand (for mobile carousel split view) */
+  readonly showOnlyHandIndex = input<number>(-1);
+
   /** Emitted when user clicks on the box to select it for betting */
   readonly boxSelected = output<PlayerBoxEvent>();
 
@@ -88,6 +91,18 @@ export class PlayerBoxComponent {
   protected readonly position = computed(() => this.box().position);
   protected readonly bet = computed(() => this.box().bet);
   protected readonly hands = computed(() => this.box().hands);
+  
+  // Hands to display - filters to single hand when showOnlyHandIndex is set
+  protected readonly displayedHands = computed(() => {
+    const allHands = this.hands();
+    const singleHandIndex = this.showOnlyHandIndex();
+    
+    if (singleHandIndex >= 0 && singleHandIndex < allHands.length) {
+      return [{ hand: allHands[singleHandIndex], originalIndex: singleHandIndex }];
+    }
+    
+    return allHands.map((hand, index) => ({ hand, originalIndex: index }));
+  });
   protected readonly isBetting = computed(() => this.gamePhase() === 'betting');
   protected readonly isCenter = computed(() => this.position() === 'center');
   protected readonly isPlaying = computed(() => this.gamePhase() === 'playing');
