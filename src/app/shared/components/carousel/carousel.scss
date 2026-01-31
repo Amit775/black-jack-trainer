@@ -1,0 +1,166 @@
+.carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.carousel-stage {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 4px;
+}
+
+.carousel-nav {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.carousel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 120px;
+  max-width: 220px;
+}
+
+.carousel-indicator {
+  display: flex;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.indicator-dot {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(60, 60, 60, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.5);
+
+  .hand-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: inherit;
+    line-height: 1;
+  }
+
+  // States
+  &.inactive {
+    background: rgba(40, 40, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+
+    &::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+    }
+  }
+
+  &.has-cards {
+    background: rgba(80, 80, 80, 0.8);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  &.playing {
+    background: rgba(33, 150, 243, 0.3);
+    border-color: #2196f3;
+    color: white;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+  }
+
+  // Result states with colors
+  &.result-win {
+    background: rgba(76, 175, 80, 0.4);
+    border-color: #4caf50;
+    color: #a5d6a7;
+  }
+
+  &.result-blackjack {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.5), rgba(255, 152, 0, 0.5));
+    border-color: #ffc107;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255, 193, 7, 0.4);
+  }
+
+  &.result-lose {
+    background: rgba(244, 67, 54, 0.35);
+    border-color: #f44336;
+    color: #ef9a9a;
+  }
+
+  &.result-push {
+    background: rgba(158, 158, 158, 0.4);
+    border-color: #9e9e9e;
+    color: #e0e0e0;
+  }
+
+  // Active (selected) indicator
+  &.active {
+    transform: scale(1.15);
+    border-width: 3px;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
+
+    &:not(.result-win):not(.result-lose):not(.result-push):not(.result-blackjack):not(.inactive) {
+      border-color: #ffc107;
+      background: rgba(255, 193, 7, 0.2);
+      color: white;
+    }
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 4px rgba(33, 150, 243, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(33, 150, 243, 0.7);
+  }
+}

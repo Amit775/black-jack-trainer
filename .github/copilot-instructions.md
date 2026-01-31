@@ -49,11 +49,17 @@
    - Use standalone components
    - Separate template (`.html`), styles (`.scss`), and logic (`.ts`)
 
-2. **State management**
+2. **Lifecycle and reactivity**
+   - **DO NOT use `effect()`** - In 99% of cases there is a better solution using `computed()`, template bindings, or explicit method calls
+   - **DO NOT use `constructor`** for initialization logic - Use `ngOnInit` or field initializers instead
+   - Prefer `computed()` signals for derived state
+   - Use `input()` and `output()` for component communication
+
+3. **State management**
    - Use the existing store patterns in `src/app/store/`
    - Keep state mutations predictable and traceable
 
-3. **Services**
+4. **Services**
    - Use services for shared business logic and API calls
    - Follow the dependency injection patterns
 

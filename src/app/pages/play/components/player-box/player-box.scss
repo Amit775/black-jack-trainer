@@ -140,6 +140,14 @@
   gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
+
+  &.single-hand-view {
+    .hand-container {
+      width: auto;
+      min-width: 0;
+    }
+  }
 }
 
 .hand-container {
@@ -226,16 +234,6 @@
   letter-spacing: 0.5px;
 }
 
-.split-badge {
-  background: linear-gradient(135deg, #7c4dff 0%, #651fff 100%);
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  color: white;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
 .double-badge {
   background: linear-gradient(135deg, #ff9800 0%, #e65100 100%);
   padding: 2px 6px;
@@ -251,13 +249,13 @@
 
 .cards-row {
   display: flex;
-  gap: 4px;
+  justify-content: center;
   position: relative;
 
   app-playing-card {
     transition: transform 0.2s ease, z-index 0s;
 
-    // Stack cards slightly for compact display
+    // Stack cards with overlap for compact display
     &:not(:first-child) {
       margin-left: -15px;
     }
@@ -495,7 +493,6 @@
     min-width: 28px;
   }
 
-  .split-badge,
   .double-badge {
     padding: 1px 5px;
     font-size: 8px;

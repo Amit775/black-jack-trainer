@@ -34,7 +34,6 @@
         <div
           class="hand-container"
           [class.active-hand]="isActiveHand(item.originalIndex)"
-          [class.split-hand]="item.hand.isSplit"
           [class.result-win]="item.hand.result === 'win' || item.hand.result === 'blackjack'"
           [class.result-lose]="item.hand.result === 'lose'"
           [class.result-push]="item.hand.result === 'push'"
@@ -57,9 +56,6 @@
                 }
               </div>
             }
-            @if (item.hand.isSplit && showOnlyHandIndex() < 0) {
-              <span class="split-badge">Split {{ item.originalIndex + 1 }}</span>
-            }
             @if (item.hand.isDoubledDown) {
               <span class="double-badge">2x</span>
             }
@@ -73,14 +69,18 @@
                 [size]="'small'"
                 (enterComplete)="onCardEnterComplete($event)"
                 (revealComplete)="onCardRevealComplete($event)"
-                [class.new-card]="cardIdx === item.hand.cards.length - 1 && isActiveHand(item.originalIndex)"
+                [class.new-card]="
+                  cardIdx === item.hand.cards.length - 1 && isActiveHand(item.originalIndex)
+                "
               />
             }
           </div>
 
           <!-- Bet Display -->
           <div class="bet-display">
-            <span class="bet-chip" [class.doubled]="item.hand.isDoubledDown"> ${{ item.hand.bet }} </span>
+            <span class="bet-chip" [class.doubled]="item.hand.isDoubledDown">
+              ${{ item.hand.bet }}
+            </span>
             @if (item.hand.result) {
               <span class="result-badge" [class]="item.hand.result">
                 {{ getResultText(item.hand.result) }}

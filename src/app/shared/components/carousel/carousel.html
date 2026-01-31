@@ -1,0 +1,41 @@
+<div class="carousel">
+  <div class="carousel-stage">
+    <button
+      class="carousel-nav prev"
+      mat-icon-button
+      (click)="navigatePrev()"
+      [disabled]="!canGoPrev()"
+    >
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <div class="carousel-content">
+      @if (currentItem(); as item) {
+        <ng-container [ngTemplateOutlet]="item.template" />
+      }
+    </div>
+
+    <button
+      class="carousel-nav next"
+      mat-icon-button
+      (click)="navigateNext()"
+      [disabled]="!canGoNext()"
+    >
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="carousel-indicator">
+    @for (indicator of indicators(); track $index; let i = $index) {
+      <button
+        class="indicator-dot"
+        [class]="getIndicatorClass(indicator, i)"
+        (click)="navigateTo(i)"
+      >
+        @if (indicator.value) {
+          <span class="hand-value">{{ indicator.value }}</span>
+        }
+      </button>
+    }
+  </div>
+</div>
