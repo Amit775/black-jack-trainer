@@ -2,7 +2,7 @@ import { signalStore, withHooks } from '@ngrx/signals';
 import { withBalance } from './features/balance.feature';
 import { withSettings } from './features/settings.feature';
 import { withShoe } from './features/shoe.feature';
-import { withGame } from './features/game.feature';
+import { withGame } from './features/game';
 
 /**
  * BlackjackStore - Main application store

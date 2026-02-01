@@ -1,0 +1,198 @@
+/**
+ * Carousel State Service
+ * 
+ * Manages carousel navigation and indicator state for the play page.
+ * Extracted from PlayComponent for single responsibility and testability.
+ * 
+ * Uses computed() signals to derive state from the store - no effect() needed.
+ */
+
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { Box, GamePhase } from '../../../shared/models';
+import { calculateHandValue } from '../../../store/utils/card.utils';
+import { BlackjackStore } from '../../../store';
+
+/**
+ * Represents an item in the carousel (either a box or a specific hand within a split box)
+ */
+export interface CarouselItem {
+  boxId: string;
+  boxIndex: number;
+  handIndex: number;
+  isSplitHand: boolean;
+}
+
+/**
+ * Carousel indicator state
+ */
+export interface CarouselIndicator {
+  value?: string;
+  state: 'inactive' | 'playing' | 'has-cards' | 'result-win' | 'result-lose' | 'result-push' | 'result-blackjack';
+}
+
+/**
+ * Build carousel items from boxes
+ * Expands split boxes into multiple carousel items
+ */
+export function buildCarouselItems(boxes: Box[]): CarouselItem[] {
+  const items: CarouselItem[] = [];
+
+  boxes.forEach((box, boxIndex) => {
+    if (box.isActive && box.hands.length > 1) {
+      // Split box - add each hand as separate item
+      for (let i = 0; i < box.hands.length; i++) {
+        items.push({ boxId: box.id, boxIndex, handIndex: i, isSplitHand: true });
+      }
+    } else {
+      // Regular box or inactive - single item
+      items.push({ boxId: box.id, boxIndex, handIndex: 0, isSplitHand: false });
+    }
+  });
+
+  return items;
+}
+
+/**
+ * Find the carousel index for a specific box and hand
+ */
+export function findCarouselIndex(
+  items: CarouselItem[],
+  boxId: string,
+  handIndex: number
+): number {
+  return items.findIndex(
+    (item) => item.boxId === boxId && item.handIndex === handIndex
+  );
+}
+
+/**
+ * Build indicator for a carousel item
+ */
+export function buildCarouselIndicator(
+  item: CarouselItem,
+  boxes: Box[],
+  activeBoxId: string | null,
+  activeHandIndex: number,
+  isPlaying: boolean
+): CarouselIndicator {
+  const box = boxes.find((b) => b.id === item.boxId);
+
+  if (!box?.isActive) {
+    return { state: 'inactive' };
+  }
+
+  const hand = box.hands[item.handIndex];
+  if (!hand) {
+    return { state: 'inactive' };
+  }
+
+  // Calculate hand value if cards exist
+  const value = hand.cards.length > 0
+    ? calculateHandValue(hand.cards).value.toString()
+    : undefined;
+
+  // Determine state
+  let state: CarouselIndicator['state'] = 'inactive';
+
+  if (hand.result) {
+    state = `result-${hand.result}` as CarouselIndicator['state'];
+  } else if (isPlaying && box.id === activeBoxId && box.activeHandIndex === item.handIndex) {
+    state = 'playing';
+  } else if (hand.cards.length > 0) {
+    state = 'has-cards';
+  }
+
+  return { value, state };
+}
+
+@Injectable()
+export class CarouselStateService {
+  private readonly store = inject(BlackjackStore);
+
+  // Manual carousel index (for user navigation)
+  private readonly _carouselIndex = signal(0);
+
+  // Public readonly signals
+  readonly carouselIndex = this._carouselIndex.asReadonly();
+
+  // Computed carousel items - derived directly from store
+  readonly carouselItems = computed(() => buildCarouselItems(this.store.boxes()));
+
+  // Computed active index (synced with game state)
+  readonly activeCarouselIndex = computed(() => {
+    const activeBox = this.store.activeBox();
+    const insuranceBox = this.store.insuranceBox();
+    const phase = this.store.phase();
+    const items = this.carouselItems();
+
+    // During active gameplay, sync to the active hand
+    if (phase === 'playing' && activeBox) {
+      const index = findCarouselIndex(items, activeBox.id, activeBox.activeHandIndex);
+      if (index !== -1) return index;
+    }
+
+    // During insurance, sync to the insurance box
+    if (phase === 'insurance' && insuranceBox) {
+      const index = items.findIndex((item) => item.boxId === insuranceBox.id);
+      if (index !== -1) return index;
+    }
+
+    // Otherwise, use manual selection
+    return this._carouselIndex();
+  });
+
+  // Current carousel item
+  readonly currentCarouselItem = computed(() => {
+    const items = this.carouselItems();
+    const index = this.activeCarouselIndex();
+    const safeIndex = Math.min(Math.max(0, index), items.length - 1);
+    return items[safeIndex];
+  });
+
+  // Carousel indicators - derived directly from store
+  readonly carouselIndicators = computed<CarouselIndicator[]>(() => {
+    const items = this.carouselItems();
+    const boxes = this.store.boxes();
+    const activeBox = this.store.activeBox();
+    const isPlaying = this.store.phase() === 'playing';
+
+    return items.map((item) =>
+      buildCarouselIndicator(
+        item,
+        boxes,
+        activeBox?.id ?? null,
+        activeBox?.activeHandIndex ?? 0,
+        isPlaying
+      )
+    );
+  });
+
+  /**
+   * Set carousel index from user interaction
+   */
+  setCarouselIndex(index: number): void {
+    this._carouselIndex.set(index);
+  }
+
+  /**
+   * Get box ID for a carousel index
+   */
+  getBoxIdAtIndex(index: number): string | null {
+    const items = this.carouselItems();
+    if (index >= 0 && index < items.length) {
+      return items[index].boxId;
+    }
+    return null;
+  }
+
+  /**
+   * Navigate to a specific box
+   */
+  navigateToBox(boxId: string): void {
+    const items = this.carouselItems();
+    const index = items.findIndex((item) => item.boxId === boxId);
+    if (index !== -1) {
+      this._carouselIndex.set(index);
+    }
+  }
+}

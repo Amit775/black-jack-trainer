@@ -1,19 +1,35 @@
+/**
+ * PlayComponent - Smart Container Component
+ *
+ * This is the main container component for the play page.
+ * Following the smart/dumb pattern, this component:
+ * - Orchestrates child services (BoxManager, CarouselState, GameActions)
+ * - Connects the store to the view
+ * - Delegates business logic to services
+ * - Passes data down to presentational (dumb) components
+ * - Handles events from child components
+ *
+ * The actual business logic is delegated to:
+ * - BoxManagerService: Box selection, betting, chip management
+ * - CarouselStateService: Carousel navigation and indicators
+ * - GameActionsService: Game action execution
+ * - BlackjackStore: Core game state
+ */
+
 import {
   Component,
   inject,
   OnInit,
   computed,
   ChangeDetectionStrategy,
-  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BlackjackStore } from '../../store';
 import { GameAction, ChipDenomination, Box } from '../../shared/models';
-import { SettingsDialogComponent } from './settings-dialog/settings-dialog';
 import {
   GameHeaderComponent,
   TableAccessoriesComponent,
@@ -25,18 +41,14 @@ import {
   type PlayerBoxEvent,
   type ChipRemoveEvent,
 } from './components';
-import { CarouselComponent, CarouselItemDirective, CarouselIndicator } from '../../shared/components';
-import { calculateHandValue } from '../../store/utils/card.utils';
+import { CarouselComponent, CarouselItemDirective } from '../../shared/components';
+import {
+  BoxManagerService,
+  CarouselStateService,
+  GameActionsService,
+} from './services';
 
-/**
- * Represents an item in the carousel (either a box or a specific hand within a split box)
- */
-export interface CarouselItem {
-  boxId: string;
-  boxIndex: number;
-  handIndex: number;
-  isSplitHand: boolean;
-}
+const DEFAULT_BET = 10;
 
 @Component({
   selector: 'app-play',
@@ -56,256 +68,126 @@ export interface CarouselItem {
     CarouselComponent,
     CarouselItemDirective,
   ],
+  providers: [
+    // Provide scoped services for this component tree
+    BoxManagerService,
+    CarouselStateService,
+    GameActionsService,
+  ],
   templateUrl: './play.html',
   styleUrl: './play.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayComponent implements OnInit {
+  // Injected dependencies
   protected readonly store = inject(BlackjackStore);
-  private readonly dialog = inject(MatDialog);
+  private readonly boxManager = inject(BoxManagerService);
+  private readonly carouselState = inject(CarouselStateService);
+  private readonly gameActions = inject(GameActionsService);
 
-  protected readonly defaultBet = 10;
+  // ============================================================================
+  // Carousel State Delegation
+  // CarouselStateService uses computed() signals that derive state from the store
+  // ============================================================================
 
-  /** Currently selected box ID for betting */
-  protected selectedBoxId = signal<string | null>(null);
+  protected readonly carouselItems = this.carouselState.carouselItems;
+  protected readonly carouselIndicators = this.carouselState.carouselIndicators;
+  protected readonly activeCarouselIndex = this.carouselState.activeCarouselIndex;
+  protected readonly currentCarouselItem = this.carouselState.currentCarouselItem;
 
-  /** Current carousel index - bound to carousel component */
-  protected readonly carouselIndex = signal(0);
-
-  /** Dynamic carousel items - expands when hands are split */
-  protected readonly carouselItems = computed<CarouselItem[]>(() => {
-    const boxes = this.store.boxes();
-    const items: CarouselItem[] = [];
-
-    boxes.forEach((box, boxIndex) => {
-      if (box.isActive && box.hands.length > 1) {
-        // Split box - add each hand as separate item
-        for (let i = 0; i < box.hands.length; i++) {
-          items.push({ boxId: box.id, boxIndex, handIndex: i, isSplitHand: true });
-        }
-      } else {
-        // Regular box or inactive - single item
-        items.push({ boxId: box.id, boxIndex, handIndex: 0, isSplitHand: false });
-      }
-    });
-
-    return items;
-  });
-
-  /** Carousel indicators derived from carousel items */
-  protected readonly carouselIndicators = computed<CarouselIndicator[]>(() => {
-    return this.carouselItems().map((item) => this.getIndicatorForItem(item));
-  });
-
-  /** The active carousel index, synced with game state */
-  protected readonly activeCarouselIndex = computed(() => {
-    const activeBox = this.store.activeBox();
-    const insuranceBox = this.store.insuranceBox();
-    const phase = this.store.phase();
-    const items = this.carouselItems();
-
-    // During active gameplay, sync to the active hand
-    if (phase === 'playing' && activeBox) {
-      const index = items.findIndex(
-        (item) => item.boxId === activeBox.id && item.handIndex === activeBox.activeHandIndex
-      );
-      if (index !== -1) return index;
-    }
-
-    // During insurance, sync to the insurance box
-    if (phase === 'insurance' && insuranceBox) {
-      const index = items.findIndex((item) => item.boxId === insuranceBox.id);
-      if (index !== -1) return index;
-    }
-
-    // Otherwise, use manual selection
-    return this.carouselIndex();
-  });
-
-  /** Current carousel item based on active index */
-  protected readonly currentCarouselItem = computed(() => {
-    const items = this.carouselItems();
-    const index = this.activeCarouselIndex();
-    const safeIndex = Math.min(Math.max(0, index), items.length - 1);
-    return items[safeIndex];
-  });
+  // ============================================================================
+  // Computed Values
+  // ============================================================================
 
   protected readonly controlsState = computed<GameControlsState>(() => ({
     canHit: this.store.canHit() ?? false,
     canStand: this.store.canStand() ?? false,
     canDoubleDown: this.store.canDoubleDown() ?? false,
     canSplit: this.store.canSplit() ?? false,
-    canPlaceBets: this.canPlaceBets(),
+    canPlaceBets: this.boxManager.canPlaceBets(),
   }));
 
+  // ============================================================================
+  // Lifecycle
+  // ============================================================================
+
   ngOnInit(): void {
-    this.store.newGame();
-    // Set bet on the first (and only) box
-    const firstBox = this.store.boxes()[0];
-    if (firstBox) {
-      this.selectedBoxId.set(firstBox.id);
-      this.store.setBoxBet(firstBox.id, this.defaultBet);
-    }
+    this.gameActions.newGame();
+    this.boxManager.initialize(DEFAULT_BET);
   }
 
-  /** Handle carousel index change from user interaction */
+  // ============================================================================
+  // Carousel Event Handlers
+  // ============================================================================
+
   protected onCarouselIndexChange(index: number): void {
-    this.carouselIndex.set(index);
-    const items = this.carouselItems();
-    if (index >= 0 && index < items.length) {
-      this.selectedBoxId.set(items[index].boxId);
+    this.carouselState.setCarouselIndex(index);
+    const boxId = this.carouselState.getBoxIdAtIndex(index);
+    if (boxId) {
+      this.boxManager.selectBox(boxId);
     }
   }
 
-  // Box helpers
-  protected getBox(boxId: string): Box | undefined {
-    return this.store.boxes().find((b) => b.id === boxId);
-  }
+  // ============================================================================
+  // Box Helpers - Delegated to BoxManagerService
+  // ============================================================================
 
-  protected getBoxByIndex(index: number): Box | undefined {
-    return this.store.boxes()[index];
+  protected getBox(boxId: string): Box | undefined {
+    return this.boxManager.getBox(boxId);
   }
 
   protected isActiveBox(boxId: string): boolean {
-    const activeBox = this.store.activeBox();
-    return activeBox?.id === boxId && this.store.phase() === 'playing';
+    return this.boxManager.isActiveBox(boxId);
   }
 
   protected isInsuranceBox(boxId: string): boolean {
-    const insuranceBox = this.store.insuranceBox();
-    return insuranceBox?.id === boxId && this.store.phase() === 'insurance';
+    return this.boxManager.isInsuranceBox(boxId);
   }
 
   protected isSelectedBox(boxId: string): boolean {
-    return this.selectedBoxId() === boxId && this.store.phase() === 'betting';
-  }
-
-  protected getActiveHandIndex(boxId: string): number {
-    const box = this.getBox(boxId);
-    return box?.activeHandIndex ?? 0;
+    return this.boxManager.isSelectedBox(boxId);
   }
 
   protected canRemoveBox(): boolean {
-    return this.store.boxes().filter((b) => b.isActive).length > 1;
+    return this.boxManager.canRemoveBox();
   }
 
-  // Event handlers
+  // ============================================================================
+  // Event Handlers
+  // ============================================================================
+
   protected onBoxSelected(event: PlayerBoxEvent): void {
-    const box = this.getBox(event.boxId);
-    if (box?.isActive) {
-      this.selectedBoxId.set(event.boxId);
-    }
+    this.boxManager.selectBox(event.boxId);
   }
 
   protected onChipRemoved(event: ChipRemoveEvent): void {
-    const box = this.getBox(event.boxId);
-    if (box?.isActive && box.bet >= event.chipValue) {
-      this.store.setBoxBet(event.boxId, box.bet - event.chipValue);
-    }
+    this.boxManager.removeChip(event.boxId, event.chipValue);
   }
 
   protected onBoxRemoved(event: PlayerBoxEvent): void {
-    this.store.removeBox(event.boxId);
+    this.boxManager.removeBox(event.boxId);
   }
 
   protected onChipSelected(chip: ChipDenomination): void {
-    const selectedId = this.selectedBoxId();
-    if (!selectedId) return;
-    const box = this.getBox(selectedId);
-    if (box?.isActive) {
-      this.store.setBoxBet(selectedId, box.bet + chip);
-    }
+    this.boxManager.addChip(chip);
   }
 
   protected onAddBox(): void {
-    const newBoxId = this.store.addBox();
+    const newBoxId = this.boxManager.addBox(DEFAULT_BET);
     if (newBoxId) {
-      this.selectedBoxId.set(newBoxId);
-      this.store.setBoxBet(newBoxId, this.defaultBet);
-      // Update carousel to show new box
-      const items = this.carouselItems();
-      const newIndex = items.findIndex((item) => item.boxId === newBoxId);
-      if (newIndex !== -1) {
-        this.carouselIndex.set(newIndex);
-      }
+      this.carouselState.navigateToBox(newBoxId);
     }
   }
 
   protected onCardAnimationComplete(cardId: string): void {
-    this.store.markCardRevealed(cardId);
+    this.gameActions.markCardRevealed(cardId);
   }
 
   protected onActionTriggered(action: GameAction): void {
-    switch (action) {
-      case 'hit':
-        this.store.hit();
-        break;
-      case 'stand':
-        this.store.stand();
-        break;
-      case 'double':
-        this.store.doubleDown();
-        break;
-      case 'split':
-        this.store.split();
-        break;
-      case 'insurance-yes':
-        this.store.takeInsurance();
-        break;
-      case 'insurance-no':
-        this.store.declineInsurance();
-        break;
-      case 'deal':
-        this.store.placeBets();
-        break;
-      case 'new-game':
-        this.store.newGame();
-        break;
-    }
+    this.gameActions.executeAction(action);
   }
 
   protected openSettings(): void {
-    this.dialog.open(SettingsDialogComponent, {
-      width: '500px',
-    });
-  }
-
-  // Private helpers
-  private getIndicatorForItem(item: CarouselItem): CarouselIndicator {
-    const box = this.getBox(item.boxId);
-
-    if (!box?.isActive) {
-      return { state: 'inactive' };
-    }
-
-    const hand = box.hands[item.handIndex];
-    if (!hand) {
-      return { state: 'inactive' };
-    }
-
-    // Calculate hand value if cards exist
-    const value = hand.cards.length > 0 ? calculateHandValue(hand.cards).value.toString() : undefined;
-
-    // Determine state
-    let state: CarouselIndicator['state'] = 'inactive';
-
-    if (hand.result) {
-      state = `result-${hand.result}` as CarouselIndicator['state'];
-    } else if (this.isActiveBox(item.boxId) && box.activeHandIndex === item.handIndex) {
-      state = 'playing';
-    } else if (hand.cards.length > 0) {
-      state = 'has-cards';
-    }
-
-    return { value, state };
-  }
-
-  private canPlaceBets(): boolean {
-    const boxes = this.store.boxes();
-    const activeBoxes = boxes.filter((b) => b.isActive);
-    if (activeBoxes.length === 0) return false;
-    if (activeBoxes.some((b) => b.bet <= 0)) return false;
-    const total = this.store.currentBet();
-    return total > 0 && total <= this.store.balance();
+    this.gameActions.openSettings();
   }
 }
