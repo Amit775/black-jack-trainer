@@ -22,7 +22,6 @@ import {
   OnInit,
   computed,
   ChangeDetectionStrategy,
-  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -47,7 +46,6 @@ import {
   BoxManagerService,
   CarouselStateService,
   GameActionsService,
-  type CarouselItem,
 } from './services';
 
 const DEFAULT_BET = 10;
@@ -89,6 +87,7 @@ export class PlayComponent implements OnInit {
 
   // ============================================================================
   // Carousel State Delegation
+  // CarouselStateService uses computed() signals that derive state from the store
   // ============================================================================
 
   protected readonly carouselItems = this.carouselState.carouselItems;
@@ -111,24 +110,6 @@ export class PlayComponent implements OnInit {
   // ============================================================================
   // Lifecycle
   // ============================================================================
-
-  constructor() {
-    // Sync carousel state with store state using effect
-    effect(() => {
-      const boxes = this.store.boxes();
-      const phase = this.store.phase();
-      const activeBox = this.store.activeBox();
-      const insuranceBox = this.store.insuranceBox();
-
-      this.carouselState.updateState(
-        boxes,
-        phase,
-        activeBox?.id ?? null,
-        activeBox?.activeHandIndex ?? 0,
-        insuranceBox?.id ?? null
-      );
-    });
-  }
 
   ngOnInit(): void {
     this.gameActions.newGame();

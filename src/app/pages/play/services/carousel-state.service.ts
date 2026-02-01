@@ -3,11 +3,14 @@
  * 
  * Manages carousel navigation and indicator state for the play page.
  * Extracted from PlayComponent for single responsibility and testability.
+ * 
+ * Uses computed() signals to derive state from the store - no effect() needed.
  */
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Box, GamePhase } from '../../../shared/models';
 import { calculateHandValue } from '../../../store/utils/card.utils';
+import { BlackjackStore } from '../../../store';
 
 /**
  * Represents an item in the carousel (either a box or a specific hand within a split box)
@@ -104,38 +107,33 @@ export function buildCarouselIndicator(
 
 @Injectable()
 export class CarouselStateService {
+  private readonly store = inject(BlackjackStore);
+
   // Manual carousel index (for user navigation)
   private readonly _carouselIndex = signal(0);
-  
-  // Inputs from parent (set via methods)
-  private readonly _boxes = signal<Box[]>([]);
-  private readonly _phase = signal<GamePhase>('betting');
-  private readonly _activeBoxId = signal<string | null>(null);
-  private readonly _activeHandIndex = signal(0);
-  private readonly _insuranceBoxId = signal<string | null>(null);
 
   // Public readonly signals
   readonly carouselIndex = this._carouselIndex.asReadonly();
 
-  // Computed carousel items
-  readonly carouselItems = computed(() => buildCarouselItems(this._boxes()));
+  // Computed carousel items - derived directly from store
+  readonly carouselItems = computed(() => buildCarouselItems(this.store.boxes()));
 
   // Computed active index (synced with game state)
   readonly activeCarouselIndex = computed(() => {
-    const activeBoxId = this._activeBoxId();
-    const insuranceBoxId = this._insuranceBoxId();
-    const phase = this._phase();
+    const activeBox = this.store.activeBox();
+    const insuranceBox = this.store.insuranceBox();
+    const phase = this.store.phase();
     const items = this.carouselItems();
 
     // During active gameplay, sync to the active hand
-    if (phase === 'playing' && activeBoxId) {
-      const index = findCarouselIndex(items, activeBoxId, this._activeHandIndex());
+    if (phase === 'playing' && activeBox) {
+      const index = findCarouselIndex(items, activeBox.id, activeBox.activeHandIndex);
       if (index !== -1) return index;
     }
 
     // During insurance, sync to the insurance box
-    if (phase === 'insurance' && insuranceBoxId) {
-      const index = items.findIndex((item) => item.boxId === insuranceBoxId);
+    if (phase === 'insurance' && insuranceBox) {
+      const index = items.findIndex((item) => item.boxId === insuranceBox.id);
       if (index !== -1) return index;
     }
 
@@ -151,35 +149,23 @@ export class CarouselStateService {
     return items[safeIndex];
   });
 
-  // Carousel indicators
+  // Carousel indicators - derived directly from store
   readonly carouselIndicators = computed<CarouselIndicator[]>(() => {
     const items = this.carouselItems();
-    const boxes = this._boxes();
-    const activeBoxId = this._activeBoxId();
-    const activeHandIndex = this._activeHandIndex();
-    const isPlaying = this._phase() === 'playing';
+    const boxes = this.store.boxes();
+    const activeBox = this.store.activeBox();
+    const isPlaying = this.store.phase() === 'playing';
 
     return items.map((item) =>
-      buildCarouselIndicator(item, boxes, activeBoxId, activeHandIndex, isPlaying)
+      buildCarouselIndicator(
+        item,
+        boxes,
+        activeBox?.id ?? null,
+        activeBox?.activeHandIndex ?? 0,
+        isPlaying
+      )
     );
   });
-
-  /**
-   * Update state from parent component
-   */
-  updateState(
-    boxes: Box[],
-    phase: GamePhase,
-    activeBoxId: string | null,
-    activeHandIndex: number,
-    insuranceBoxId: string | null
-  ): void {
-    this._boxes.set(boxes);
-    this._phase.set(phase);
-    this._activeBoxId.set(activeBoxId);
-    this._activeHandIndex.set(activeHandIndex);
-    this._insuranceBoxId.set(insuranceBoxId);
-  }
 
   /**
    * Set carousel index from user interaction
